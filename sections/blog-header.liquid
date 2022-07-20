@@ -1,0 +1,146 @@
+{% if current_tags %}
+  {% capture blog_title %}<h1 class="page__header__title section__title-style">{{ blog.title | link_to: blog.url }}: <span>{{ current_tags.first | capitalize }}</span></h1>{% endcapture %}
+{% else %}
+  {% capture blog_title %}<h1 class="page__header__title section__title-style">{{ blog.title }}</h1>{% endcapture %}
+{% endif %}
+
+{% include 'page-header', snippet_instance: section, the_title: blog_title %}
+
+{% schema %}
+{
+  "name": "Blog Header",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Breadcrumb Navigation"
+    },
+    {
+      "type": "checkbox",
+      "id": "breadcrumb",
+      "label": "Show Breadcrumb",
+      "default": true
+    },
+    {
+       "type": "radio",
+       "id": "breadcrumb_position",
+       "label": "Breadcrumb Position",
+       "options": [
+         { "value": "above", "label": "Above Title" },
+         { "value": "below", "label": "Below Title" }
+       ],
+       "default": "below"
+    },
+    {
+      "type": "header",
+      "content": "Blog Header Style"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_custom_styles",
+      "label": "Enable Custom Styles",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "min": 100,
+      "max": 600,
+      "step": 10,
+      "unit": "px",
+      "label": "Section Height",
+      "default": 200
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title Color"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Title Alignment",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_shadow",
+      "label": "Text shadow effect",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "soft",
+          "label": "Soft"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "intense",
+          "label": "Intense"
+        }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "header",
+      "content": "Background Style"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background Color"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background Image"
+    },
+    {
+      "type": "select",
+      "id": "background_image_style",
+      "label": "Background Image Style",
+      "default": "cover",
+      "options": [
+        {
+          "value": "cover",
+          "label": "Cover"
+        },
+        {
+          "value": "repeat",
+          "label": "Repeat"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "parallax",
+      "label": "Enable Parallax Effect",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "darken",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Darken Background",
+      "default": 0
+    }
+  ]
+}
+{% endschema %}

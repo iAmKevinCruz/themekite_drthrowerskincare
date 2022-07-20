@@ -1,0 +1,132 @@
+<!-- /templates/collection.list.liquid -->
+
+{% paginate collection.products by settings.collection_items_count %}
+
+{% section 'collection-header' %}
+
+<div class="collection-page collection-list-view">
+  <div class="row">
+
+    {% if settings.display_collection_sidebar %}
+      {% assign collection_content_wrap = 'medium-9 large-9' %}
+
+      <div class="medium-3 large-3 columns collection-sidebar js-animate-appear-left">
+        {% section 'collection-sidebar' %}
+      </div>
+    {% endif %}
+
+
+    <div class="{{ collection_content_wrap }} columns collection-content">
+
+      {% if settings.display_collection_title or settings.display_collection_sorting or settings.display_collection_view_switch %}
+        <header class="row collection-header js-animate-appear-show">
+          <div class="{% if settings.display_collection_sorting or settings.display_collection_view_switch %}large-7{% endif %} columns collection__title__wrap">
+            {% if settings.display_collection_title %}
+              <h1 class="collection-title">{{ collection.title }}</h1>
+              {% if collection.description != blank %}
+                <div class="rte collection-description">
+                  {{ collection.description }}
+                </div>
+              {% endif %}
+            {% else %}
+              &nbsp;
+            {% endif %}
+          </div>
+
+          <div class="large-5 columns collection-sorting">
+            <div class="sorting-controls">
+              {% include 'collection-sorting' %}
+            </div>
+          </div>
+        </header>
+      {% endif %}
+
+      <div class="products-list js-animate-appear-up">
+        {% for product in collection.products %}
+
+          {% assign on_sale = false %}
+          {% if product.compare_at_price > product.price %}
+            {% assign on_sale = true %}
+          {% endif %}
+
+          {% assign sold_out = true %}
+          {% if product.available %}
+            {% assign sold_out = false %}
+          {% endif %}
+
+          <div class="row product-list-item">
+            <div class="medium-2 large-2 columns">
+              <a href="{{ product.url | within: collection }}">
+                <img src="{{ product.featured_image.src | img_url: 'medium' }}" alt="{{ product.featured_image.alt | escape }}" class="product-image">
+              </a>
+            </div>
+            <div class="medium-7 large-7 columns">
+                <h3 class="product-title"><a href="{{ product.url | within: collection }}">{{ product.title }}</a></h3>
+                <div class="rte product-desc">
+                  <a href="{{ product.url | within: collection }}">{{ product.content | strip_html | truncatewords: 30 }}</a>
+                </div>
+            </div>
+            <div class="medium-3 large-3 columns">
+              <a href="{{ product.url | within: collection }}" class="product-loop-price">
+                {% if on_sale %}
+                  <span class="visually-hidden">{{ 'products.general.regular_price' | t }}</span>
+                  <s><span class="money">{{ product.compare_at_price | money }}</span></s>
+                  {% if product.price_varies %}
+                    {% assign sale_price = product.price | money | prepend: '<span class="money">' | append: '</span>' %}
+                    {{ 'products.product.on_sale_from_html' | t: price: sale_price }}
+                  {% else %}
+                    <span class="money">{{ product.price | money }}</span>
+                  {% endif %}
+                {% else %}
+                  {% if product.price_varies %}
+                    {% assign price = product.price | money | prepend: '<span class="money">' | append: '</span>' %}
+                    {{ 'products.general.from_text_html' | t: price: price }}
+                  {% else %}
+                    <span class="money">{{ product.price | money }}</span>
+                  {% endif %}
+                {% endif %}
+                {% if sold_out %}
+                  <span class="is-sold-out">{{ 'products.product.sold_out' | t }}</span>
+                {% endif %}
+              </a>
+              {% if settings.add_spr_markup %}
+                <a href="{{ product.url | within: collection }}#shopify-product-reviews">
+                  <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+                </a>
+              {% endif %}
+
+              {% if settings.enable_quick_add_to_cart_desktop and sold_out == false %}
+                <div class="product-list-item__action">
+                  {% if product.variants.size > 1 %}
+                    <input type="submit" onclick="location.href='{{ product.url | within: collection }}';"  value="{{ settings.see_buying_options_button_text }}" class="quick-add-to-cart-btn button" />
+                  {% else %}
+                    <form method="post" action="/cart/add">
+                      <input type="hidden" name="id" value="{{ product.variants.first.id }}" />
+                      <input type="submit" value="{{ 'products.product.add_to_cart' | t }}" class="button  quick-add-to-cart-btn addToCartButton" />
+                    </form>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+        {% else %}
+
+          <div class="row">
+            <p>{{ 'collections.general.no_matches' | t }}</p>
+          </div>
+
+        {% endfor %}
+        <!-- //product list output -->
+      </div>
+
+      {% if paginate.pages > 1 %}
+        <div class="pagination">
+          {{ paginate | default_pagination | replace: '&laquo; Previous', '<span class="icon icon-angle-left"></span>' | replace: 'Next &raquo;', '<span class="icon icon-angle-right"></span>' }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endpaginate %}

@@ -1,0 +1,17 @@
+{% comment %}
+  Cart Sidebar
+{% endcomment %}
+<div class="off-canvas position-right" id="cartSidebar" data-transition="overlap">
+  <div class="cart-sidebar-title">
+    {{ 'cart.general.title' | t }}
+    <button class="close-button" aria-label="Close menu" type="button" data-close>
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div id="cartSidebarContainer">
+    <div class="sidebar-cart__placeholder">
+      {%- include 'placeholder-content' -%}
+    </div>
+  </div>
+</div>

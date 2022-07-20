@@ -1,0 +1,73 @@
+<!-- /templates/search.liquid -->
+
+{% assign grid_results = false %}
+
+{% assign respond_js_secret_key = shop.domain | md5 %}
+{% unless search.terms == respond_js_secret_key %}
+{% paginate search.results by 10 %}
+
+{% section 'collection-header' %}
+
+<div class="search-page">
+  <div class="row">
+    {% if settings.display_collection_sidebar %}
+      {% assign collection_content_wrap = 'medium-9 large-9' %}
+
+      <div class="medium-3 large-3 columns collection-sidebar js-animate-appear-left">
+        {% section 'collection-sidebar' %}
+      </div>
+    {% endif %}
+
+    <div class="{{ collection_content_wrap }} columns search results js-animate-appear-show">
+      {% if search.performed %}
+        {% if search.results_count == 0 %}
+          <h1 class="search-page-title">{{ 'general.search.results_for_html' | t: terms: search.terms }}</h1>
+          <p class="nothing-found-text">{{ 'general.search.no_results_html' | t:  terms: search.terms }}</p>
+        {% else %}
+          <h1 class="search-page-title">{{ 'general.search.results_for_html' | t: terms: search.terms }}</h1>
+        {% endif %}
+      {% else %}
+        <h1 class="search-page-title">{{ 'general.search.title' | t }}</h1>
+      {% endif %}
+
+      {% include 'search-bar' %}
+
+      {% if search.performed %}
+
+        <hr class="search-hr">
+        <div class="row small-up-2 medium-up-3 large-up-4">
+          {% for product in search.results %}
+            {% if product.price %}
+
+              {% assign on_sale = false %}
+              {% if product.compare_at_price > product.price %}
+                {% assign on_sale = true %}
+              {% endif %}
+
+              {% assign sold_out = true %}
+              {% if product.available %}
+                {% assign sold_out = false %}
+              {% endif %}
+
+              {% assign grid_item_width = 'column column-block' %}
+              {% include 'product-grid-item', the_product: product %}
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        {% if paginate.pages > 1 %}
+          <div class="pagination">
+            {{ paginate | default_pagination | replace: '&laquo; Previous', '&larr;' | replace: 'Next &raquo;', '&rarr;' }}
+          </div>
+        {% endif %}
+
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endpaginate %}
+
+{% else %}
+  {% include 'respond' %}
+  {% layout none %}
+{% endunless %}

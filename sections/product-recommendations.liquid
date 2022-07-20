@@ -1,0 +1,126 @@
+{% if section.settings.show_related_products %}
+  <div class="product-recommendations" data-product-id="{{ product.id }}" data-limit="{{ section.settings.related_products_count }}">
+    {% case section.settings.related_products_count %}
+      {% when '4' %}
+        {% assign grid_settings = 'row small-up-2 medium-up-4 large-up-4' %}
+      {% when '6' %}
+        {% assign grid_settings = 'row small-up-2 medium-up-6 large-up-6' %}
+    {% endcase %}
+
+    {%- if recommendations.products_count > 0 -%}
+      {% if section.settings.display_border %}
+      <div class="row columns"><hr></div>
+      {% endif %}
+
+      <aside class="related-products">
+        {% unless section.settings.title == blank %}
+          <div class="row columns">
+            <h2 class="related-products-title text-{{ section.settings.title_alignment }} section-title">{{ section.settings.title }}</h2>
+          </div>
+        {% endunless %}
+
+        <div class="{{ grid_settings }} featured__grid {% if section.settings.is_carousel %}featured-carousel{% endif %}">
+          {%- for product in recommendations.products -%}
+            {% include 'product-grid-item' %}
+          {%- endfor -%}
+        </div>
+      </aside>
+    {%- endif -%}
+  </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Related Product",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_related_products",
+      "label": "Enable Related Products",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "is_carousel",
+      "label": "Mobile Carousel",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_border",
+      "label": "Display Border",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "title_alignment",
+      "label": "Section Title Alignment",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section title",
+      "default": "Related Products"
+    },
+    {
+      "type": "select",
+      "id": "related_products_count",
+      "label": "Number of Products",
+      "default": "4",
+      "options": [
+        {
+          "value": "4",
+          "label": "4"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
+{% javascript %}
+var loadProductRecommendationsIntoSection = function() {
+  var productRecommendationsSection = document.querySelector(".product-recommendations");
+  if (productRecommendationsSection === null) { return; }
+  var productId = productRecommendationsSection.dataset.productId;
+  var limit = productRecommendationsSection.dataset.limit;
+  var requestUrl = "/recommendations/products?section_id=product-recommendations&limit="+limit+"&product_id="+productId;
+
+  var request = new XMLHttpRequest();
+  request.open("GET", requestUrl);
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 300) {
+      var container = document.createElement("div");
+      container.innerHTML = request.response;
+      productRecommendationsSection.parentElement.innerHTML = container.querySelector(".product-recommendations").innerHTML;
+      relatedProductsCurrencyUpdate();
+      universe.featuredCarouselMobile($('.related-products'));
+      universe.ajaxCartReInit();         
+    }
+  };
+  request.send();
+};
+document.addEventListener("shopify:section:load", function(event) {
+  if (event.detail.sectionId === "product-recommendations") {
+    loadProductRecommendationsIntoSection();
+  }
+});
+
+loadProductRecommendationsIntoSection();
+
+{% endjavascript %}

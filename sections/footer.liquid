@@ -1,0 +1,260 @@
+<div data-section-id="{{ section.id }}" data-section-type="footer">
+  {% if section.settings.footer_newsletter_enable %}
+    <div class="footer-subscribe">
+      <div class="row">
+        <div class="small-12 medium-12 large-7 columns">
+          <div class="footer-subscribe__title rte">{{ section.settings.footer_newsletter_title }}</div>
+        </div>
+        <div class="small-12 medium-8 large-5 columns subscribe__form-wrap">
+          {% if section.settings.newsletter_form_action != blank %}
+            <form action="{{ section.settings.newsletter_form_action }}" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" target="_blank">
+              <div class="inline-signup">
+                <input type="email" class="form__input" value="{% if customer %}{{ customer.email }}{% endif %}" placeholder="{{ 'general.newsletter_form.newsletter_email' | t }}" name="EMAIL" id="mail" class="input-group-field" aria-label="{{ 'general.newsletter_form.newsletter_email' | t }}" autocapitalize="off">
+                <input type="submit" class="button" name="subscribe" value="{{ 'general.newsletter_form.submit' | t }}">
+              </div>
+            </form>
+          {% else %}
+            {% form 'customer' %}
+              {{ form.errors | default_errors }}
+              {% if form.posted_successfully? %}
+                <p class="note form-success">{{ 'general.newsletter_form.confirmation' | t }}</p>
+              {% else %}
+                <div class="inline-signup">
+                  <input type="email" class="form__input" value="{% if customer %}{{ customer.email }}{% endif %}" placeholder="{{ 'general.newsletter_form.newsletter_email' | t }}" name="contact[email]" id="Email" aria-label="{{ 'general.newsletter_form.newsletter_email' | t }}" autocapitalize="off">
+                  <input type="hidden" name="contact[tags]" value="newsletter">
+                  <input type="submit" class="button" name="subscribe" value="{{ 'general.newsletter_form.submit' | t }}">
+                </div>
+              {% endif %}
+            {% endform %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <footer id="site-footer">
+    {% if section.blocks.size != 0 or section.settings.display_footer_info_section %}
+      <div class="row footer-widgets">
+
+        {% if section.settings.display_footer_info_section %}
+          {% assign footer_widgets_grid = 'small-12 medium-12 large-7 columns' %}
+        {% else %}
+          {% assign footer_widgets_grid = 'columns footer-widgets-grid_wide' %}
+        {% endif %}
+
+        <div class="{{ footer_widgets_grid }}">
+          <div class="row">
+
+            {% for block in section.blocks %}
+              <div {{ block.shopify_attributes }} class="small-12 medium-4 large-4 columns footer-widget footer-widget__{{ block.type }} {% if forloop.last == true %}end{% endif %}">
+                {% case block.type %}
+                  {% when 'footer-nav' %}
+                    <h3 class="widget__title">{{ block.settings.menu_title }}</h3>
+                    <ul class="vertical menu">
+                      {% for link in linklists[block.settings.menu_id].links %}
+                        <li><a href="{{ link.url }}" title="{{ link.title }}">{{ link.title }}</a></li>
+                      {% endfor %}
+                    </ul>
+
+                  {% when 'html' %}
+                    <h3 class="widget__title">{{ block.settings.title }}</h3>
+                    <div class="widget__desc rte-raw">
+                      {{ block.settings.html }}
+                    </div>
+
+                  {% when 'text' %}
+                    <h3 class="widget__title">{{ block.settings.title }}</h3>
+                    <div>
+                      <div class="widget__desc rte-raw">
+                        {{ block.settings.text }}
+                      </div>
+                      {% if block.settings.show_social_links %}
+                        {% include 'social-media-links', snippet_instance: block %}
+                      {% endif %}
+                    </div>
+
+                {% endcase %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if section.settings.display_footer_info_section %}
+          <div class="small-12 medium-12 large-5 columns footer-widget footer-about">
+            <h3 class="widget__title">{{ section.settings.footer_about_heading }}</h3>
+            <div class="widget__desc rte-raw">{{ section.settings.footer_about_text }}</div>
+            {% if section.settings.footer_social_media_icons %}
+              {% include 'social-media-links' %}
+            {% endif %}
+          </div>
+        {% endif %}
+
+      </div>
+    {% endif %}
+
+    <div class="footer-bottom">
+      <div class="row">
+        <div class="small-12 medium-12 large-6 columns">
+          {% if section.settings.show_payment_icons %}
+            {% include 'payment-types-list' %}
+          {% endif %}
+        </div>
+        <div class="small-12 medium-12 large-6 columns copyright-wrap">
+          <div class="copyright">
+           {% unless section.settings.footer_copyright == blank %}{{section.settings.footer_copyright}}{% endunless %}
+           {% if section.settings.display_powered_by_shopify %}{{ powered_by_link }}{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+{% schema %}
+  {
+    "name": "Footer",
+    "max_blocks": 3,
+    "settings": [
+      {
+        "type": "header",
+        "content": "Newsletter Settings"
+      },
+      {
+        "type": "checkbox",
+        "id": "footer_newsletter_enable",
+        "label": "Show newsletter signup",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "newsletter_form_action",
+        "label": "MailChimp form action URL",
+        "info": "[Where do I find my MailChimp form action URL?](https:\/\/shopify.barrelny.com\/where-do-i-find-the-mailchimp-signup-url\/)"
+      },
+      {
+        "type": "richtext",
+        "id": "footer_newsletter_title",
+        "label": "Newsletter signup title",
+        "default": "<p>Subscribe to our newsletter!</p>"
+      },
+      {
+        "type": "header",
+        "content": "General Settings"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_payment_icons",
+        "label": "Display Payment Icons",
+        "default": true
+      },
+      {
+        "type": "richtext",
+        "id": "footer_copyright",
+        "label": "Copyright text",
+        "default": "<p>© <a href=\'https://outlane.co\'>Universe Theme</a> by <a href=\'https://outlane.co\'>Outlane</a>.</p>"
+      },
+      {
+        "type": "checkbox",
+        "id": "display_powered_by_shopify",
+        "label": "Display \'Powered By Shopify\'",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "Info Section"
+      },
+      {
+        "type": "checkbox",
+        "id": "display_footer_info_section",
+        "label": "Display Info Section",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "footer_about_heading",
+        "label": "Title",
+        "default": "About Us"
+      },
+      {
+        "type": "richtext",
+        "id": "footer_about_text",
+        "label": "Text",
+        "default": "<p>Add your text here</p>"
+      },
+      {
+        "type": "checkbox",
+        "id": "footer_social_media_icons",
+        "label": "Display social media icons",
+        "default": true
+      }
+    ],
+    "blocks": [
+      {
+        "type": "footer-nav",
+        "name": "Menu",
+        "settings": [
+          {
+            "type": "text",
+            "id": "menu_title",
+            "label": "Menu Title",
+            "default": "Menu"
+          },
+          {
+            "type": "link_list",
+            "id": "menu_id",
+            "label": "Choose Menu",
+            "default": "footer"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "name": "Text",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Custom Text"
+          },
+          {
+            "type": "richtext",
+            "id": "text",
+            "label": "Text",
+            "default": "<p>Add some text here.</p>"
+          },
+          {
+            "type": "checkbox",
+            "id": "show_social_links",
+            "label": "Display Social Network Icons",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "html",
+        "name": "Html",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Custom Html"
+          },
+          {
+            "type": "html",
+            "id": "html",
+            "label": "Html"
+          }
+        ]
+      }
+    ],
+    "default": {
+      "blocks": [
+        {
+          "type": "footer-nav"
+        }
+      ]
+    }
+  }
+{% endschema %}

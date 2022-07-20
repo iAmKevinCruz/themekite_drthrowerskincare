@@ -1,0 +1,382 @@
+<div class="main-container">
+  <div class="secound-head">
+      <div class="section-header text-center page__header content-section">
+        <h1>{{ page.title }}</h1>
+      </div>
+      <div class="heading tab">
+        <ul class="tab-title tabs">
+          <li><a href="#tab-1"> {% if section.settings.acne_skin != blank %}{{ section.settings.acne_skin }}{% endif %}</a></li>
+          <li><a href="#tab-2"> {% if  section.settings.skin_treatment != blank %}{{ section.settings.skin_treatment }}{% endif %}</a></li>
+          <li><a href="#tab-3"> {% if section.settings.shave_bump_treatment != blank %}{{ section.settings.shave_bump_treatment }}{% endif %}</a></li>
+          <li><a href="#tab-4"> {% if section.settings.hair_regrowth_treatment != blank %}{{ section.settings.hair_regrowth_treatment }}{% endif %}</a></li>
+        </ul>
+      </div>
+  </div>
+  
+  <div class="banner-title-subtitle-image">
+    <div class="banner-image">
+      {% if section.settings.banner_image != blank %}
+   		<img class="show_banner_image" src="{{ section.settings.banner_image | img_url:'master' }}">
+      {% endif %}	
+    </div>
+    <div class="banner-title-subtitle">
+      <div class="row">
+        <div class="column">
+          {% if section.settings.banner_title != blank  %}
+              <div class="banner-title">{{ section.settings.banner_title }}</div>
+          {% endif %}	
+          {% if section.settings.banner_subtitle != blank  %}
+              <div class="banner-subtitle">{{ section.settings.banner_subtitle }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- block title subtitle  -->
+  
+
+  <!-- acne block -->
+  <div class="block-title-subtitle-imagecontent tab-content" >
+       <div class="row">
+          <div class="column">
+             <div class="block-title-subtitle" id="tab-1">
+                <div class="block-title">
+                  {% if section.settings.acne_block_title != blank %}
+                  <div class="show-block-title">{{ section.settings.acne_block_title }}</div>
+                  {% endif %}
+                </div>
+                <div class="block-subtitle">
+                  {% if section.settings.acne_block_subtitle != blank %}
+                  <div class="show-subtitle">{{ section.settings.acne_block_subtitle }}</div>
+                  {% endif %}
+                </div>
+   		 	</div>
+          </div>
+       </div>
+       <div class="block-image-description">
+         <div class="row">
+            {% for block in section.blocks %}
+           		 {% case block.type %}
+                     {% when 'acneblock' %}
+                        <div class="column">
+                           <div class="block-type{% if block.settings.acne_image_description == blank  %} no_description{% endif %}">
+                              <div class="image-description">
+                                  <div class="display-image">
+                                     {% if block.settings.image_acne %}
+                                          <img class="show-image" src="{{ block.settings.image_acne | img_url:'medium' }}">
+                                      {% endif %}
+                                  </div>
+                                  <div class="display-description">
+                                     {% if block.settings.acne_image_description != blank  %}
+                                       <div class="show-description">{{ block.settings.acne_image_description }}</div>
+                                      {% endif %}
+                                  </div>
+                              </div>
+              	 		 </div>
+                	</div>
+           		    {% endcase %}
+            {% endfor %}
+         </div>
+   	 </div>
+  </div>
+  <!-- end acne -->
+   <div class="block-title-subtitle-imagecontent tab-content" id="tab-2">
+       <div class="row">
+          <div class="column">
+               <div class="block-title-subtitle">
+                    <div class="block-title">
+                      {% if section.settings.skin_block_title != blank %}
+                        <div class="show-block-title">{{ section.settings.skin_block_title }}</div>
+                      {% endif %}
+                    </div>
+                     <div class="block-subtitle">
+                       {% if section.settings.skin_block_subtitle != blank %}
+                          <div class="show-subtitle">{{ section.settings.skin_block_subtitle }}</div>
+                      {% endif %}
+                    </div>
+      	        </div>
+            </div>
+       </div>
+     <div class="block-image-description">
+        <div class="row">
+            {% for block in section.blocks %}
+          		{% case block.type %}
+                    {% when 'skinblock' %}
+                          <div class="column">
+                            <div class="block-type{% if block.settings.skin_image_description == blank  %} no_description{% endif %}">
+                                 <div class="image-description">
+                                    <div class="display-image">
+                                       {% if  block.settings.image_skin != blank  %}
+                                            <img class="show-image" src="{{ block.settings.image_skin | img_url:'medium' }}">
+                                        {% endif %}
+                                    </div>
+                                    <div class="display-description">
+                                       {% if block.settings.skin_image_description != blank  %}
+                                         <div class="show-description">{{ block.settings.skin_image_description }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+               			 </div>
+              		</div>
+          		{% endcase %}
+            {% endfor %}
+       </div>
+   	 </div>
+  </div>
+  
+   <div class="block-title-subtitle-imagecontent tab-content" id="tab-3">
+     <div class="row">
+          <div class="column">
+                <div class="block-title-subtitle">
+                    <div class="block-title">
+                      {% if section.settings.shave_block_title != blank %}
+                        <div class="show-block-title">{{ section.settings.shave_block_title }}</div>
+                      {% endif %}
+                    </div>
+                     <div class="block-subtitle">
+                       {% if section.settings.shave_block_subtitle != blank %}
+                          <div class="show-subtitle">{{ section.settings.shave_block_subtitle }}</div>
+                      {% endif %}
+                    </div>
+    	        </div>
+            </div>
+       </div>
+     
+      <div class="block-image-description">
+        <div class="row">
+            {% for block in section.blocks %}
+          		 {% case block.type %}
+                    {% when 'shaveblock' %}
+                          <div class="column">
+                             <div class="block-type{% if block.settings.shavebump_image_description == blank  %} no_description{% endif %}">
+                                 <div class="image-description">
+                                    <div class="display-image">
+                                       {% if  block.settings.image_shave_bump != blank  %}
+                                            <img class="show-image" src="{{ block.settings.image_shave_bump | img_url:'medium' }}">
+                                        {% endif %}
+                                    </div>
+                                    <div class="display-description">
+                                       {% if block.settings.shavebump_image_description != blank  %}
+                                         <div class="show-description">{{ block.settings.shavebump_image_description }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+               			 </div>
+               		  </div>
+          	  {% endcase %}
+            {% endfor %}
+        </div>
+   	</div>
+ </div>
+  
+  
+   <div class="block-title-subtitle-imagecontent tab-content" id="tab-4">
+     <div class="row">
+          <div class="column">
+             <div class="block-title-subtitle">
+           <div class="block-title">
+             {% if section.settings.hair_block_title != blank %}
+             <div class="show-block-title">{{ section.settings.hair_block_title }}</div>
+             {% endif %}
+           </div>
+           <div class="block-subtitle">
+             {% if section.settings.hair_block_subtitle != blank %}
+             <div class="show-subtitle">{{ section.settings.hair_block_subtitle }}</div>
+             {% endif %}
+           </div>
+         </div>
+          </div>
+   	 </div>
+     
+    <div class="block-image-description">
+      <div class="row">
+        {% for block in section.blocks %}
+        	{% case block.type %}
+                 {% when 'growerhairthblock' %}
+                     <div class="column">
+                        <div class="block-type{% if block.settings.hairgrower_image_description == blank  %} no_description{% endif %}">
+                               <div class="image-description">
+                                  <div class="display-image">
+                                     {% if  block.settings.image_hairgrower != blank  %}
+                                          <img class="show-image" src="{{ block.settings.image_hairgrower | img_url:'medium' }}">
+                                      {% endif %}
+                                  </div>
+                                  <div class="display-description">
+                                     {% if block.settings.hairgrower_image_description != blank  %}
+                                       <div class="show-description">{{ block.settings.hairgrower_image_description }}</div>
+                                      {% endif %}
+                                  </div>
+                              </div>
+               		 </div>
+             </div>
+       		{% endcase %}
+        {% endfor %}
+      </div>
+   	 </div>
+   </div>
+  <!-- end block title subtitle -->
+
+  
+</div>
+<script>
+$(document).on('click', '.tab-title li a',function(e){
+  e.preventDefault();
+  var siteHeaderHeight = $('#main-header').height() + $('.secound-head').height() + 15;
+  $('html, body').animate({scrollTop:$($(this).attr('href')).position().top - siteHeaderHeight}, '500');
+});
+</script> 
+{% schema %}
+  {
+    "name": "Page Template",
+    "settings": [
+		{
+			"type":"text",
+			"id":"acne_skin",
+			"label":"Add Tab Text1"
+		},
+		{
+			"type":"text",
+			"id":"skin_treatment",
+			"label":"Add Tab Text2"
+		},
+		{
+			"type":"text",
+			"id":"shave_bump_treatment",
+			"label":"Add Tab Text3"
+		},
+		{
+			"type":"text",
+			"id":"hair_regrowth_treatment",
+			"label":"Add Tab Text4"
+		},
+		{
+			"type":"image_picker",
+			"id":"banner_image",
+			"label":"Add Banner Image"
+		},
+		{
+			"type":"text",
+			"id":"banner_title",
+			"label":"Add Banner Title"
+		},
+		{
+			"type":"text",
+			"id":"banner_subtitle",
+			"label":"Add Banner Sub Title"
+		},
+		{
+			"type":"text",
+			"id":"acne_block_title",
+			"label":"Add Acne Block Title"
+		},
+		{
+			"type":"text",
+			"id":"acne_block_subtitle",
+			"label":"Add Acne Block SubTitle"
+		},
+		{
+			"type":"text",
+			"id":"skin_block_title",
+			"label":"Add Skin Block Title"
+		},
+		{
+			"type":"text",
+			"id":"skin_block_subtitle",
+			"label":"Add Skin Block SubTitle"
+		},
+		{
+			"type":"text",
+			"id":"shave_block_title",
+			"label":"Add Shave Block Title"
+		},
+		{
+			"type":"text",
+			"id":"shave_block_subtitle",
+			"label":"Add Shave Block SubTitle"
+		},
+		{
+			"type":"text",
+			"id":"hair_block_title",
+			"label":"Add Hair Block Title"
+		},
+		{
+			"type":"text",
+			"id":"hair_block_subtitle",
+			"label":"Add Hair Block SubTitle"
+		}
+	],
+	"blocks":[
+		{
+			"type":"acneblock",
+			"name":"Acne Block",
+			"settings":[
+				{
+					"type":"image_picker",
+					"id":"image_acne",
+					"label":"Select Image"
+				},
+				{
+					"type":"textarea",
+					"id":"acne_image_description",
+					"label":"Add Description"
+				}
+			]
+		},
+		{
+			"type":"skinblock",
+			"name":"Skin Block",
+			"settings":[
+				{
+					"type":"image_picker",
+					"id":"image_skin",
+					"label":"Select Image"
+				},
+				{
+					"type":"textarea",
+					"id":"skin_image_description",
+					"label":"Add Description"
+				}
+			]
+		},
+		{
+			"type":"shaveblock",
+			"name":"Shave Bump Block",
+			"settings":[
+				{
+					"type":"image_picker",
+					"id":"image_shave_bump",
+					"label":"Select Image"
+				},
+				{
+					"type":"textarea",
+					"id":"shavebump_image_description",
+					"label":"Add Description"
+				}
+			]
+		},
+		{
+			"type":"growerhairthblock",
+			"name":"Hair Growth Block",
+			"settings":[
+				{
+					"type":"image_picker",
+					"id":"image_hairgrower",
+					"label":"Select Image"
+				},
+				{
+					"type":"textarea",
+					"id":"hairgrower_image_description",
+					"label":"Add Description"
+				}
+			]
+		}
+	]
+  }
+{% endschema %}
+
+{% stylesheet %}
+{% endstylesheet %}
+
+{% javascript %}
+
+{% endjavascript %}

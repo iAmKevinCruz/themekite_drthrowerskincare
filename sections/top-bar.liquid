@@ -1,0 +1,81 @@
+  <!-- begin top-bar -->
+  {% if section.settings.topbar_text != blank or section.settings.topbar_text_mobile != blank%}
+    <div id="top-bar">
+      <div class="row">
+        <div class="small-12 medium-12 large-12 columns top-bar-message__wrap">
+          {% if section.settings.topbar_text != blank %}
+            <div class="top-bar-message show-for-large rte-raw">
+              {{ section.settings.topbar_text }}
+            </div>
+          {% endif %}
+          {% if section.settings.topbar_text_mobile != blank %}
+            <div class="top-bar-message hide-for-large rte-raw">
+              {{ section.settings.topbar_text_mobile }}
+            </div>
+          {% endif %}
+        </div>
+        {%comment%}
+        <div class="show-for-large medium-6 large-1 columns text-right header__secondary-menu">
+          {% if secondary_menu_id != blank or settings.enable_currency_switch %}
+            <ul class="menu top-bar-menu">
+              {% for link in linklists[secondary_menu_id].links %}
+                <li class="top-bar-menu__item"><a class="top-bar-menu__link" href="{{ link.url }}">{{ link.title }}</a></li>
+              {% endfor %}
+              {% if settings.enable_currency_switch %}
+                <li class="top-bar-menu__item">
+                  {% include 'currency-switch', snippet_usage: 'desktop' %}
+                </li>
+              {% endif %}
+            </ul>
+          {% endif %}
+        </div>
+          {%endcomment%}
+      </div>
+    </div>
+  {% endif %}
+  <!-- //top-bar -->
+
+<script>
+  $(window).scroll(function() {    
+    var scroll = $(window).scrollTop();
+
+    if (scroll >= 500) {
+      $("#shopify-section-top-bar").addClass("bottom-sticky");
+    } else {
+      $("#shopify-section-top-bar").removeClass("bottom-sticky");
+    }
+  });
+
+</script>
+
+{% schema %}
+  {
+    "name": "Top bar",
+    "settings": [
+      {
+        "type": "richtext",
+        "id": "topbar_text",
+        "label": "Top bar text",
+        "default": "<p>Add your text here</p>"
+      },
+      {
+        "type": "richtext",
+        "id": "topbar_text_mobile",
+        "label": "Top bar text for mobile",
+        "default": "<p>Add your text here</p>"
+      }
+     ],
+    "presets": [
+      {
+        "name": "Top bar",
+        "category": "Content"
+      }
+    ]
+  }
+{% endschema %}
+
+{% stylesheet %}
+{% endstylesheet %}
+
+{% javascript %}
+{% endjavascript %}

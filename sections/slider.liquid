@@ -1,0 +1,372 @@
+{%- capture section_id -%} section-{{-section.id-}} {%- endcapture -%}
+
+{% unless section.blocks.size == 0 %}
+  <div id="section-{{ section.id }}" data-section-id="{{ section.id }}" data-section-type="homepage-slider">
+    <div class="content-placeholder slider__preloader">
+      {%- include 'placeholder-pulse' -%}
+    </div>
+
+    {% if section.settings.mobile_height != 400 or section.settings.desktop_height != 600 %}
+      <style>
+      #{{section_id}} .slider-item__content {
+        min-height: {{ section.settings.mobile_height | append: 'px' }};
+      }
+      @media print, screen and (min-width: 1024px) {
+        #{{section_id}} .slider-item__content {
+          min-height: {{ section.settings.desktop_height | append: 'px' }};
+        }
+      }
+      </style>
+    {% endif %}
+
+    <div class="homepage-slider js-animate-appear" data-slick='{ {% if section.settings.autoplay %}"autoplay": true,{% endif %}"autoplaySpeed": {{ section.settings.autoplay_speed }} }'>
+      {% for block in section.blocks %}
+        <div class="slider-item">
+          {%- capture section_id -%} block-{{-block.id-}} {%- endcapture -%}
+          {% if block.settings.enable_custom_styles %}
+            {% include 'section-styles', instance_settings: block.settings %}
+          {% endif %}
+
+          {% assign bg_image = block.settings.background_image %}
+          {% assign bg_image_style = block.settings.background_image_style %}
+          {% if bg_image != blank and bg_image_style == 'cover' %} {% assign lazyload = 'lazyload' %} {% endif %}
+          <div  id="{{section_id}}">
+            <div class="slider-item__content content-section {{ lazyload }} {% if forloop.index == 1 %}lazypreload{% endif %} section__background {% if block.settings.bg_image_style == 'repeat' %}section__background_repeat{% endif %}" style="{{ section_styles_css | strip_newlines }}"
+              {% if bg_image != blank and bg_image_style == 'cover' %}
+                data-bgset="{% include 'bgset', image: bg_image %}"
+                data-sizes="auto"
+                data-parent-fit="cover"
+              {% endif %}>
+              <div class="background_darken"></div>
+              <div id="content-{{ block.id }}" class="row columns slide-content text-{{ block.settings.alignment }} text-shadow__{{- block.settings.text_shadow -}}">
+                {% unless block.settings.title == blank %}
+                  <h2 class="slide__title section__title-style">
+                    {{ block.settings.title }}
+                  </h2>
+                {% endunless %}
+                {% unless block.settings.subheading == blank %}
+                  <div class="slide__desc section__heading-style">
+                    {{ block.settings.subheading | escape }}
+                  </div>
+                {% endunless %}
+                <div class="slide__btns">
+                  {% if block.settings.btn_link1 != blank %}
+                    {% assign btn_id = block.id | append: '1' %}
+                    {% include 'button-style', snippet_instance: block, button_id: btn_id, btn_bg_color: block.settings.btn_bg_color1, btn_style: block.settings.btn_style1, btn_text_color: block.settings.btn_text_color1 %}
+                    <a id="button-{{ btn_id }}" href="{{ block.settings.btn_link1 }}" class="button white {% if block.settings.btn_style1 == 'hollow' %}hollow{% endif %}">{{ block.settings.btn_text1 }}</a>
+                  {% endif %}
+                  {% if block.settings.btn_link2 != blank %}
+                    {% assign btn_id = block.id | append: '2' %}
+                    {% include 'button-style', snippet_instance: block, button_id: btn_id, btn_bg_color: block.settings.btn_bg_color2, btn_style: block.settings.btn_style2, btn_text_color: block.settings.btn_text_color2 %}
+                    <a id="button-{{ btn_id }}" href="{{ block.settings.btn_link2 }}" class="button white {% if block.settings.btn_style2 == 'hollow' %}hollow{% endif %}">{{ block.settings.btn_text2 }}</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endunless %}
+
+
+{% schema %}
+  {
+    "name": "Slider",
+    "max_blocks": 10,
+    "settings": [
+      {
+        "type": "header",
+        "content": "Slider Settings"
+      },
+      {
+        "type": "checkbox",
+        "id": "autoplay",
+        "label": "Auto-rotate slides",
+        "default": true
+      },
+      {
+        "type": "select",
+        "id": "autoplay_speed",
+        "label": "Change slides every",
+        "options": [
+          { "value": "3000", "label": "3 seconds" },
+          { "value": "4000", "label": "4 seconds" },
+          { "value": "5000", "label": "5 seconds" },
+          { "value": "6000", "label": "6 seconds" },
+          { "value": "7000", "label": "7 seconds" },
+          { "value": "8000", "label": "8 seconds" },
+          { "value": "9000", "label": "9 seconds" },
+          { "value": "10000", "label": "10 seconds" }
+        ],
+        "default": "7000"
+      },
+      {
+        "type": "range",
+        "id": "desktop_height",
+        "min": 200,
+        "max": 1000,
+        "step": 10,
+        "unit": "px",
+        "label": "Section Height (Desktop)",
+        "default": 600
+      },
+      {
+        "type": "range",
+        "id": "mobile_height",
+        "min": 200,
+        "max": 800,
+        "step": 10,
+        "unit": "px",
+        "label": "Section Height (Mobile)",
+        "default": 400
+      }
+    ],
+    "blocks": [
+      {
+        "type": "image_slide",
+        "name": "Image slide",
+        "settings": [
+          {
+            "type": "header",
+            "content": "Background Settings"
+          },
+          {
+            "type": "image_picker",
+            "id": "background_image",
+            "label": "Background Image",
+            "info": "2048 x 1150px .jpg recommended"
+          },
+          {
+            "type": "select",
+            "id": "background_image_style",
+            "label": "Background image style",
+            "options": [
+              {
+                "value": "cover",
+                "label": "Cover"
+              },
+              {
+                "value": "repeat",
+                "label": "Repeat"
+              }
+            ],
+            "default": "cover"
+          },
+          {
+            "type": "range",
+            "id": "darken",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "unit": "%",
+            "label": "Darken Background",
+            "default": 0
+          },
+          {
+            "type": "header",
+            "content": "General Settings"
+          },
+          {
+            "type": "select",
+            "id": "alignment",
+            "label": "Text alignment",
+            "default": "center",
+            "options": [
+              {
+                "value": "left",
+                "label": "Left"
+              },
+              {
+                "value": "center",
+                "label": "Center"
+              },
+              {
+                "value": "right",
+                "label": "Right"
+              }
+            ]
+          },
+          {
+            "type": "html",
+            "id": "title",
+            "label": "Heading",
+            "default": "Image slide"
+          },
+          {
+            "type": "html",
+            "id": "subheading",
+            "label": "Subheading",
+            "default": "Short slide description"
+          },
+          {
+            "type": "header",
+            "content": "Content Style"
+          },
+          {
+            "type": "checkbox",
+            "id": "enable_custom_styles",
+            "label": "Enable Custom Styles",
+            "default": true
+          },
+          {
+            "type": "color",
+            "id": "title_color",
+            "label": "Title Color"
+          },
+          {
+            "type": "color",
+            "id": "heading_color",
+            "label": "Text Color"
+          },
+          {
+            "type": "select",
+            "id": "text_shadow",
+            "label": "Text shadow effect",
+            "options": [
+              {
+                "value": "none",
+                "label": "None"
+              },
+              {
+                "value": "soft",
+                "label": "Soft"
+              },
+              {
+                "value": "medium",
+                "label": "Medium"
+              },
+              {
+                "value": "intense",
+                "label": "Intense"
+              }
+            ],
+            "default": "soft"
+          },
+          {
+            "type": "color",
+            "id": "background_color",
+            "label": "Background Color"
+          },
+          {
+            "type": "range",
+            "id": "title_font_size",
+            "min": 20,
+            "max": 120,
+            "step": 1,
+            "unit": "px",
+            "label": "Title font size",
+            "default": 56
+          },
+          {
+            "type": "range",
+            "id": "heading_font_size",
+            "min": 12,
+            "max": 100,
+            "step": 1,
+            "unit": "px",
+            "label": "Description font size",
+            "default": 24
+          },
+          {
+            "type": "header",
+            "content": "Button 1 Settings"
+          },
+          {
+            "type": "text",
+            "id": "btn_text1",
+            "label": "Button Text"
+          },
+          {
+            "type": "url",
+            "id": "btn_link1",
+            "label": "Button URL"
+          },
+          {
+            "type": "select",
+            "id": "btn_style1",
+            "label": "Button Style",
+            "default": "full",
+            "options": [
+              {
+                "value": "full",
+                "label": "Full"
+              },
+              {
+                "value": "hollow",
+                "label": "Hollow"
+              }
+            ]
+          },
+          {
+            "type": "color",
+            "id": "btn_bg_color1",
+            "label": "Button Background Color"
+          },
+          {
+            "type": "color",
+            "id": "btn_text_color1",
+            "label": "Button Text Color"
+          },
+          {
+            "type": "header",
+            "content": "Button 2 Settings"
+          },
+          {
+            "type": "text",
+            "id": "btn_text2",
+            "label": "Button 2 Text"
+          },
+          {
+            "type": "url",
+            "id": "btn_link2",
+            "label": "Button 2 URL"
+          },
+          {
+            "type": "select",
+            "id": "btn_style2",
+            "label": "Button 2 Style",
+            "default": "full",
+            "options": [
+              {
+                "value": "full",
+                "label": "Full"
+              },
+              {
+                "value": "hollow",
+                "label": "Hollow"
+              }
+            ]
+          },
+          {
+            "type": "color",
+            "id": "btn_bg_color2",
+            "label": "Button 2 Background Color"
+          },
+          {
+            "type": "color",
+            "id": "btn_text_color2",
+            "label": "Button 2 Text Color"
+          }
+        ]
+      }
+    ],
+    "presets": [{
+      "name": "Slider",
+      "category": "Hero",
+      "settings": {
+        "autoplay": true,
+        "autoplay_speed": "5000"
+      },
+      "blocks": [
+        {
+          "type": "image_slide"
+        },
+        {
+          "type": "image_slide"
+        }
+      ]
+    }]
+  }
+{% endschema %}

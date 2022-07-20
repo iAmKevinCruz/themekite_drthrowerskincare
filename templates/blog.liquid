@@ -1,0 +1,76 @@
+{% paginate blog.articles by settings.blog_posts_count %}
+
+{% section 'blog-header' %}
+
+<div class="row blog-page">
+  <div class="medium-8 large-8 columns blogroll">
+    {% for article in blog.articles %}
+
+      <div class="blog-article js-animate-appear-up">
+
+        <h2 class="article-title"><a href="{{ article.url }}">{{ article.title }}</a></h2>
+        <div class="article-meta">
+          {% capture date %}<span class="article-date"><i class="icon icon-calendar-alt"></i> <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">{{ article.published_at | date: format: 'month_day_year' }}</time></span>{% endcapture %}
+          {% capture author %}{{ article.author }}{% endcapture %}
+
+          {{ date }}
+          {% include 'tags-article' %}
+
+          {% if settings.blog_post_author %}
+            <span class="article-author"><i class="icon icon-user"></i> {{ author }}</span>
+          {% endif %}
+
+          {% if blog.comments_enabled? %}
+            <a class="comments-num" href="{{ article.url }}#comments">
+              <i class="icon icon-comment"></i>
+              {{ 'blogs.comments.with_count' | t: count: article.comments_count }}
+            </a>
+          {% endif %}
+
+        </div>
+
+        {% if article.image %}
+          <a class="article-featured-img" href="{{ article.url }}">
+            {%- assign img_url = article.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+            <img class="lazyload"
+              src="{{ article.image | img_url: '300x' }}"
+              data-src="{{ img_url }}"
+              data-widths="[180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
+              data-aspectratio="1.6"
+              data-sizes="auto"
+              data-parent-fit="cover"
+              alt="{{ article.image.alt | escape }}">
+          </a>
+        {% endif %}
+
+        <div class="rte">
+          {% if article.excerpt.size > 0 %}
+            {{ article.excerpt }}
+          {% else %}
+            <p>{{ article.content | strip_html | truncatewords: 50 }}</p>
+          {% endif %}
+        </div>
+
+        <a class="read-more-btn" href="{{ article.url }}">{{ 'blogs.article.read_more' | t }} <span class="icon icon-angle-right"></span></a>
+      </div>
+
+      {% unless forloop.last %}<hr>{% endunless %}
+
+    {% endfor %}
+
+    {% if paginate.pages > 1 %}
+      <hr>
+      <div class="pagination">
+        {{ paginate | default_pagination | replace: '&laquo; Previous', '<span class="icon icon-angle-left"></span>' | replace: 'Next &raquo;', '<span class="icon icon-angle-right"></span>' }}
+      </div>
+    {% endif %}
+
+  </div>
+
+  <aside class="medium-4 large-4 columns blog-sidebar js-animate-appear-right" role="complementary">
+    {% section 'blog-sidebar' %}
+  </aside>
+
+</div>
+
+{% endpaginate %}

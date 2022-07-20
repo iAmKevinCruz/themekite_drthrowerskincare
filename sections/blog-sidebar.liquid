@@ -1,0 +1,282 @@
+<div data-section-id="{{ section.id }}" data-section-type="blog-sidebar">
+  {% for block in section.blocks %}
+    {% case block.type %}
+      {% comment %}
+        Blog tags
+      {% endcomment %}
+      {% when 'blog-categories' %}
+        <div {{ block.shopify_attributes }}>
+          {% if blog.all_tags.size > 0 %}
+            <div class="blog-widget">
+              {% unless block.settings.title == blank %}
+                <h3 class="widget__title">{{ block.settings.title }}</h3>
+              {% endunless %}
+              <ul class="no-bullets">
+                {% for tag in blog.all_tags %}
+                  <li><a href="{{ blog.url }}/tagged/{{ tag | handle }}">{{ tag | capitalize }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+
+      {% comment %}
+        Recent blog posts
+      {% endcomment %}
+      {% when 'recent-posts' %}
+        <div {{ block.shopify_attributes }}>
+          <div class="blog-widget recent-posts-widget">
+            {% unless block.settings.title == blank %}
+              <h3 class="widget__title">{{ block.settings.title }}</h3>
+            {% endunless %}
+
+            {% for article in blogs[blog.handle].articles limit:block.settings.total %}
+              <div class="recent-posts-item row">
+              {% if article.image %}
+                <div class="small-3 medium-4 large-4 columns recent-post-img">
+                  <a href="{{ article.url }}">
+                    {{ article.image.src | img_url: '480x300', crop: 'center' | img_tag: article.title }}
+                  </a>
+                </div>
+                <div class="small-9 medium-8 large-8 columns">
+              {% else %}
+                <div class="columns">
+              {% endif %}
+                  <a class="post-link" href="{{ article.url }}">{{ article.title }}</a>
+                  <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">{{ article.published_at | date: format: 'month_day_year' }}</time>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% comment %}
+          Collection Widget
+        {% endcomment %}
+        {% when 'custom-collection' %}
+          <div {{ block.shopify_attributes }}>
+            <div class="blog-widget blog-collection-widget">
+              {% unless block.settings.title == blank %}
+                <h3 class="widget__title">{{ block.settings.title }}</h3>
+              {% endunless %}
+
+              {% assign collection_id = block.settings.collection %}
+
+              {% unless collection_id == blank %}
+                <div class="products-list">
+                  {% for product in collections[collection_id].products limit:block.settings.count %}
+
+                    {% assign sold_out = true %}
+                    {% if product.available %}
+                      {% assign sold_out = false %}
+                    {% endif %}
+
+                    <div class="row products-list-item">
+                      <div class="small-3 medium-3 large-3 columns products-list__img">
+                        <a href="{{ product.url | within: collection }}">
+                          <img src="{{ product.featured_image.src | img_url: 'medium' }}" alt="{{ product.featured_image.alt | escape }}">
+                        </a>
+                      </div>
+                      <div class="small-9 medium-9 large-9 columns products-list__info">
+                        <a class="products-list__title" href="{{ product.url | within: collection }}">{{ product.title }}</a>
+                        <a class="products-list__price" href="{{ product.url | within: collection }}">
+                          {% if on_sale %}
+                            <span class="visually-hidden">{{ 'products.general.regular_price' | t }}</span>
+                            <s><span class="money">{{ product.compare_at_price | money }}</span></s>
+                            {% if product.price_varies %}
+                              {% assign sale_price = product.price | money %}
+                              {{ 'products.product.on_sale_from_html' | t: price: sale_price }}
+                            {% else %}
+                              <span class="money">{{ product.price | money }}</span>
+                            {% endif %}
+                          {% else %}
+                            {% if product.price_varies %}
+                              {% assign price = product.price | money %}
+                              {{ 'products.general.from_text_html' | t: price: price }}
+                            {% else %}
+                              <span class="money">{{ product.price | money }}</span>
+                            {% endif %}
+                          {% endif %}
+                          {% if sold_out %}
+                            <span class="is-sold-out">{{ 'products.product.sold_out' | t }}</span>
+                          {% endif %}
+                        </a>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endunless %}
+            </div>
+          </div>
+
+        {% comment %}
+          Custom Menu
+        {% endcomment %}
+        {% when 'custom-menu' %}
+          <div {{ block.shopify_attributes }}>
+            <div class="blog-widget">
+              {% unless block.settings.title == blank %}
+                <h3 class="widget__title">{{ block.settings.title }}</h3>
+              {% endunless %}
+              <ul class="no-bullets">
+                {% for link in linklists[block.settings.menu_id].links %}
+                  <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+
+        {% comment %}
+          Text Widget
+        {% endcomment %}
+        {% when 'text-widget' %}
+          <div {{ block.shopify_attributes }}>
+            <div class="blog-widget">
+              {% unless block.settings.title == blank %}
+                <h3 class="widget__title">{{ block.settings.title }}</h3>
+              {% endunless %}
+              {% unless block.settings.content == blank %}
+                <div class="rte">
+                  {{ block.settings.content }}
+                </div>
+              {% endunless %}
+            </div>
+          </div>
+
+        {% comment %}
+          HTML Widget
+        {% endcomment %}
+        {% when 'html-widget' %}
+          <div {{ block.shopify_attributes }}>
+            <div class="blog-widget">
+              {% unless block.settings.title == blank %}
+                <h3 class="widget__title">{{ block.settings.title }}</h3>
+              {% endunless %}
+              {% unless block.settings.html == blank %}
+                {{ block.settings.html }}
+              {% endunless %}
+            </div>
+          </div>
+
+    {% endcase %}
+  {% endfor %}
+</div>
+
+
+{% schema %}
+  {
+    "name": "Blog Sidebar",
+    "blocks": [
+      {
+        "type": "blog-categories",
+        "name": "Blog Categories",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Categories"
+          }
+        ]
+      },
+      {
+        "type": "recent-posts",
+        "name": "Recent Articles",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Recent Articles"
+          },
+          {
+            "type": "range",
+            "id": "total",
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "label": "Number of posts to be displayed",
+            "default": 5
+          }
+        ]
+      },
+      {
+        "type": "custom-collection",
+        "name": "Collection",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Products"
+          },
+          {
+            "type": "collection",
+            "id": "collection",
+            "label": "Choose Collection"
+          },
+          {
+            "type": "range",
+            "id": "count",
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "label": "Number of products to be displayed",
+            "default": 3
+          }
+        ]
+      },
+      {
+        "type": "custom-menu",
+        "name": "Menu",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Custom Menu"
+          },
+          {
+            "id": "menu_id",
+            "type": "link_list",
+            "label": "Choose Menu"
+          }
+        ]
+      },
+      {
+        "type": "text-widget",
+        "name": "Text Widget",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Custom Text"
+          },
+          {
+            "type": "richtext",
+            "id": "content",
+            "label": "Content"
+          }
+        ]
+      },
+      {
+        "type": "html-widget",
+        "name": "HTML Widget",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Custom Html"
+          },
+          {
+            "type": "html",
+            "id": "html",
+            "label": "Html"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

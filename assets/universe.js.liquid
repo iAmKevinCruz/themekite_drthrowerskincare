@@ -1,0 +1,1495 @@
+/* Jonathan Snook - MIT License - https://github.com/snookca/prepareTransition */
+(function(a){a.fn.prepareTransition=function(){return this.each(function(){var b=a(this);b.one("TransitionEnd webkitTransitionEnd transitionend oTransitionEnd",function(){b.removeClass("is-transitioning")});var c=["transition-duration","-moz-transition-duration","-webkit-transition-duration","-o-transition-duration"];var d=0;a.each(c,function(a,c){d=parseFloat(b.css(c))||d});if(d!=0){b.addClass("is-transitioning");b[0].offsetWidth}})}})(jQuery);
+
+/* replaceUrlParam - http://stackoverflow.com/questions/7171099/how-to-replace-url-parameter-with-javascript-jquery */
+function replaceUrlParam(e,r,a){var n=new RegExp("("+r+"=).*?(&|$)"),c=e;return c=e.search(n)>=0?e.replace(n,"$1"+a+"$2"):c+(c.indexOf("?")>0?"&":"?")+r+"="+a};
+
+
+/* ================ SLATE ================ */
+window.universe = window.universe || {};
+window.theme = window.theme || {};
+
+theme.Sections = function Sections() {
+  this.constructors = {};
+  this.instances = [];
+
+  $(document)
+    .on('shopify:section:load', this._onSectionLoad.bind(this))
+    .on('shopify:section:unload', this._onSectionUnload.bind(this))
+    .on('shopify:section:select', this._onSelect.bind(this))
+    .on('shopify:section:deselect', this._onDeselect.bind(this))
+    .on('shopify:block:select', this._onBlockSelect.bind(this))
+    .on('shopify:block:deselect', this._onBlockDeselect.bind(this));
+};
+
+theme.Sections.prototype = _.assignIn({}, theme.Sections.prototype, {
+  _createInstance: function(container, constructor) {
+    var $container = $(container);
+    var id = $container.attr('data-section-id');
+    var type = $container.attr('data-section-type');
+
+    constructor = constructor || this.constructors[type];
+
+    if (_.isUndefined(constructor)) {
+      return;
+    }
+
+    var instance = _.assignIn(new constructor(container), {
+      id: id,
+      type: type,
+      container: container
+    });
+
+    this.instances.push(instance);
+  },
+
+  _onSectionLoad: function(evt) {
+    var container = $('[data-section-id]', evt.target)[0];
+    if (container) {
+      this._createInstance(container);
+    }
+  },
+
+  _onSectionUnload: function(evt) {
+    this.instances = _.filter(this.instances, function(instance) {
+      var isEventInstance = instance.id === evt.detail.sectionId;
+
+      if (isEventInstance) {
+        if (_.isFunction(instance.onUnload)) {
+          instance.onUnload(evt);
+        }
+      }
+
+      return !isEventInstance;
+    });
+  },
+
+  _onSelect: function(evt) {
+    // eslint-disable-next-line no-shadow
+    var instance = _.find(this.instances, function(instance) {
+      return instance.id === evt.detail.sectionId;
+    });
+
+    if (!_.isUndefined(instance) && _.isFunction(instance.onSelect)) {
+      instance.onSelect(evt);
+    }
+  },
+
+  _onDeselect: function(evt) {
+    // eslint-disable-next-line no-shadow
+    var instance = _.find(this.instances, function(instance) {
+      return instance.id === evt.detail.sectionId;
+    });
+
+    if (!_.isUndefined(instance) && _.isFunction(instance.onDeselect)) {
+      instance.onDeselect(evt);
+    }
+  },
+
+  _onBlockSelect: function(evt) {
+    // eslint-disable-next-line no-shadow
+    var instance = _.find(this.instances, function(instance) {
+      return instance.id === evt.detail.sectionId;
+    });
+
+    if (!_.isUndefined(instance) && _.isFunction(instance.onBlockSelect)) {
+      instance.onBlockSelect(evt);
+    }
+  },
+
+  _onBlockDeselect: function(evt) {
+    // eslint-disable-next-line no-shadow
+    var instance = _.find(this.instances, function(instance) {
+      return instance.id === evt.detail.sectionId;
+    });
+
+    if (!_.isUndefined(instance) && _.isFunction(instance.onBlockDeselect)) {
+      instance.onBlockDeselect(evt);
+    }
+  },
+
+  register: function(type, constructor) {
+    this.constructors[type] = constructor;
+
+    $('[data-section-type=' + type + ']').each(
+      function(index, container) {
+        this._createInstance(container, constructor);
+      }.bind(this)
+    );
+  }
+});
+
+window.slate = window.slate || {};
+
+/**
+ * iFrames
+ * -----------------------------------------------------------------------------
+ * Wrap videos in div to force responsive layout.
+ *
+ * @namespace iframes
+ */
+
+slate.rte = {
+  /**
+   * Wrap tables in a container div to make them scrollable when needed
+   *
+   * @param {object} options - Options to be used
+   * @param {jquery} options.$tables - jquery object(s) of the table(s) to wrap
+   * @param {string} options.tableWrapperClass - table wrapper class name
+   */
+  wrapTable: function(options) {
+    options.$tables.wrap(
+      '<div class="' + options.tableWrapperClass + '"></div>'
+    );
+  },
+
+  /**
+   * Wrap iframes in a container div to make them responsive
+   *
+   * @param {object} options - Options to be used
+   * @param {jquery} options.$iframes - jquery object(s) of the iframe(s) to wrap
+   * @param {string} options.iframeWrapperClass - class name used on the wrapping div
+   */
+  wrapIframe: function(options) {
+    options.$iframes.each(function() {
+      // Add wrapper to make video responsive
+      $(this).wrap('<div class="' + options.iframeWrapperClass + '"></div>');
+
+      // Re-set the src attribute on each iframe after page load
+      // for Chrome's "incorrect iFrame content on 'back'" bug.
+      // https://code.google.com/p/chromium/issues/detail?id=395791
+      // Need to specifically target video and admin bar
+      this.src = this.src;
+    });
+  }
+};
+
+window.slate = window.slate || {};
+
+/**
+ * A11y Helpers
+ * -----------------------------------------------------------------------------
+ * A collection of useful functions that help make your theme more accessible
+ * to users with visual impairments.
+ *
+ *
+ * @namespace a11y
+ */
+
+slate.a11y = {
+  /**
+   * For use when focus shifts to a container rather than a link
+   * eg for In-page links, after scroll, focus shifts to content area so that
+   * next `tab` is where user expects if focusing a link, just $link.focus();
+   *
+   * @param {JQuery} $element - The element to be acted upon
+   */
+  pageLinkFocus: function($element) {
+    var focusClass = 'js-focus-hidden';
+
+    $element
+      .first()
+      .attr('tabIndex', '-1')
+      .focus()
+      .addClass(focusClass)
+      .one('blur', callback);
+
+    function callback() {
+      $element
+        .first()
+        .removeClass(focusClass)
+        .removeAttr('tabindex');
+    }
+  },
+
+  /**
+   * If there's a hash in the url, focus the appropriate element
+   */
+  focusHash: function() {
+    var hash = window.location.hash;
+
+    // is there a hash in the url? is it an element on the page?
+    if (hash && document.getElementById(hash.slice(1))) {
+      this.pageLinkFocus($(hash));
+    }
+  },
+
+  /**
+   * When an in-page (url w/hash) link is clicked, focus the appropriate element
+   */
+  bindInPageLinks: function() {
+    $('a[href*=#]').on(
+      'click',
+      function(evt) {
+        alert('calle');
+        this.pageLinkFocus($(evt.currentTarget.hash));
+      }.bind(this)
+    );
+  },
+
+  /**
+   * Traps the focus in a particular container
+   *
+   * @param {object} options - Options to be used
+   * @param {jQuery} options.$container - Container to trap focus within
+   * @param {jQuery} options.$elementToFocus - Element to be focused when focus leaves container
+   * @param {string} options.namespace - Namespace used for new focus event handler
+   */
+  trapFocus: function(options) {
+    var eventName = options.namespace
+      ? 'focusin.' + options.namespace
+      : 'focusin';
+
+    if (!options.$elementToFocus) {
+      options.$elementToFocus = options.$container;
+    }
+
+    options.$container.attr('tabindex', '-1');
+    options.$elementToFocus.focus();
+
+    $(document).off('focusin');
+
+    $(document).on(eventName, function(evt) {
+      if (
+        options.$container[0] !== evt.target &&
+        !options.$container.has(evt.target).length
+      ) {
+        options.$container.focus();
+      }
+    });
+  },
+
+  /**
+   * Removes the trap of focus in a particular container
+   *
+   * @param {object} options - Options to be used
+   * @param {jQuery} options.$container - Container to trap focus within
+   * @param {string} options.namespace - Namespace used for new focus event handler
+   */
+  removeTrapFocus: function(options) {
+    var eventName = options.namespace
+      ? 'focusin.' + options.namespace
+      : 'focusin';
+
+    if (options.$container && options.$container.length) {
+      options.$container.removeAttr('tabindex');
+    }
+
+    $(document).off(eventName);
+  }
+};
+
+/**
+ * Image Helper Functions
+ * -----------------------------------------------------------------------------
+ * A collection of functions that help with basic image operations.
+ *
+ */
+
+theme.Images = (function() {
+  /**
+   * Preloads an image in memory and uses the browsers cache to store it until needed.
+   *
+   * @param {Array} images - A list of image urls
+   * @param {String} size - A shopify image size attribute
+   */
+
+  function preload(images, size) {
+    if (typeof images === 'string') {
+      images = [images];
+    }
+
+    for (var i = 0; i < images.length; i++) {
+      var image = images[i];
+      this.loadImage(this.getSizedImageUrl(image, size));
+    }
+  }
+
+  /**
+   * Loads and caches an image in the browsers cache.
+   * @param {string} path - An image url
+   */
+  function loadImage(path) {
+    new Image().src = path;
+  }
+
+  /**
+   * Swaps the src of an image for another OR returns the imageURL to the callback function
+   * @param image
+   * @param element
+   * @param callback
+   */
+  function switchImage(image, element, callback) {
+    var size = this.imageSize(element.src);
+    var imageUrl = this.getSizedImageUrl(image.src, size);
+
+    if (callback) {
+      callback(imageUrl, image, element); // eslint-disable-line callback-return
+    } else {
+      element.src = imageUrl;
+    }
+  }
+
+  /**
+   * +++ Useful
+   * Find the Shopify image attribute size
+   *
+   * @param {string} src
+   * @returns {null}
+   */
+  function imageSize(src) {
+    var match = src.match(
+      /.+_((?:pico|icon|thumb|small|compact|medium|large|grande)|\d{1,4}x\d{0,4}|x\d{1,4})[_\\.@]/
+    );
+
+    if (match !== null) {
+      if (match[2] !== undefined) {
+        return match[1] + match[2];
+      } else {
+        return match[1];
+      }
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * +++ Useful
+   * Adds a Shopify size attribute to a URL
+   *
+   * @param src
+   * @param size
+   * @returns {*}
+   */
+  function getSizedImageUrl(src, size) {
+    if (size === null) {
+      return src;
+    }
+
+    if (size === 'master') {
+      return this.removeProtocol(src);
+    }
+
+    var match = src.match(
+      /\.(jpg|jpeg|gif|png|bmp|bitmap|tiff|tif)(\?v=\d+)?$/i
+    );
+
+    if (match !== null) {
+      var prefix = src.split(match[0]);
+      var suffix = match[0];
+
+      return this.removeProtocol(prefix[0] + '_' + size + suffix);
+    }
+
+    return null;
+  }
+
+  function removeProtocol(path) {
+    return path.replace(/http(s)?:/, '');
+  }
+
+  return {
+    preload: preload,
+    loadImage: loadImage,
+    switchImage: switchImage,
+    imageSize: imageSize,
+    getSizedImageUrl: getSizedImageUrl,
+    removeProtocol: removeProtocol
+  };
+})();
+
+/*============================================================================
+  Money Format
+  - Shopify.format money is defined in option_selection.js.
+    If that file is not included, it is redefined here.
+==============================================================================*/
+if ((typeof Shopify) === 'undefined') { Shopify = {}; }
+if (!Shopify.formatMoney) {
+  Shopify.formatMoney = function(cents, format) {
+    var value = '',
+        placeholderRegex = /\{\{\s*(\w+)\s*\}\}/,
+        formatString = (format || this.money_format);
+
+    if (typeof cents == 'string') {
+      cents = cents.replace('.','');
+    }
+
+    function defaultOption(opt, def) {
+      return (typeof opt == 'undefined' ? def : opt);
+    }
+
+    function formatWithDelimiters(number, precision, thousands, decimal) {
+      precision = defaultOption(precision, 2);
+      thousands = defaultOption(thousands, ',');
+      decimal   = defaultOption(decimal, '.');
+
+      if (isNaN(number) || number == null) {
+        return 0;
+      }
+
+      number = (number/100.0).toFixed(precision);
+
+      var parts   = number.split('.'),
+          dollars = parts[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1' + thousands),
+          cents   = parts[1] ? (decimal + parts[1]) : '';
+
+      return dollars + cents;
+    }
+
+    switch(formatString.match(placeholderRegex)[1]) {
+      case 'amount':
+        value = formatWithDelimiters(cents, 2);
+        break;
+      case 'amount_no_decimals':
+        value = formatWithDelimiters(cents, 0);
+        break;
+      case 'amount_with_comma_separator':
+        value = formatWithDelimiters(cents, 2, '.', ',');
+        break;
+      case 'amount_no_decimals_with_comma_separator':
+        value = formatWithDelimiters(cents, 0, '.', ',');
+        break;
+    }
+
+    return formatString.replace(placeholderRegex, value);
+  };
+}
+
+/*============================================================================
+  Universe Functions
+==============================================================================*/
+window.universe = window.universe || {};
+
+Foundation.addToJquery($);
+
+universe.cacheSelectors = function () {
+  universe.cache = {
+    // General
+    $html                    : $('html'),
+    $body                    : $(document.body),
+
+    // Collection Pages
+    $changeView              : $('.change-view'),
+
+    // Customer Pages
+    $recoverPasswordLink     : $('#RecoverPassword'),
+    $hideRecoverPasswordLink : $('#HideRecoverPasswordLink'),
+    $recoverPasswordForm     : $('#RecoverPasswordForm'),
+    $customerLoginForm       : $('#CustomerLoginForm'),
+    $passwordResetSuccess    : $('#ResetSuccess')
+  };
+};
+
+universe.init = function () {
+  $(document).foundation();
+
+  FastClick.attach(document.body);
+  universe.cacheSelectors();
+  universe.collectionViews();
+  universe.loginForms();
+
+  {% if settings.enable_img_zoom %}
+    universe.zoomInit($('.image-zoom .__first-image'));
+  {% endif %}
+};
+
+universe.getHash = function () {
+  return window.location.hash;
+};
+
+/*============================================================================
+  Product Page
+==============================================================================*/
+universe.productPage = function (options) {
+  var moneyFormat = options.money_format,
+      variant = options.variant,
+      selector = options.selector;
+
+  // Selectors
+  var $addToCart = $('#AddToCart'),
+      $productPrice = $('#ProductPrice'),
+      $comparePrice = $('#ComparePrice'),
+      $quantityElements = $('.quantity-selector, label + .js-qty'),
+      $addToCartText = $('#AddToCartText');
+
+  if (variant) {
+    if (variant.featured_image) {
+       $('#productImages').attr('data-featured-img', variant.featured_image.id);
+       if ($('#productImages').hasClass('featured-img-first')) {
+        $('#productImages').removeClass('featured-img-first');
+       } else {
+         universe.changeFeaturedImg(variant.featured_image.id);
+       }
+    }
+
+    // Select a valid variant if available
+    if (variant.available) {
+      // Available, enable the submit button, change text, show quantity elements
+      $addToCart.removeClass('disabled').prop('disabled', false);
+      $addToCartText.html({{ 'products.product.add_to_cart' | t | json }});
+      $quantityElements.show();
+    } else {
+      // Sold out, disable the submit button, change text, hide quantity elements
+      $addToCart.addClass('disabled').prop('disabled', true);
+      $addToCartText.html({{ 'products.product.sold_out' | t | json }});
+      $quantityElements.hide();
+    }
+
+    // Regardless of stock, update the product price
+    $productPrice.html( '<span class="money money-variant-update">' + Shopify.formatMoney(variant.price, moneyFormat) + '</span>' );
+
+    // Also update and show the product's compare price if necessary
+    if (variant.compare_at_price > variant.price) {
+      $comparePrice
+        .html( '<span class="money money-variant-update">' + Shopify.formatMoney(variant.compare_at_price, moneyFormat) + '</span>')
+        .show();
+    } else {
+      $comparePrice.hide();
+    }
+  } else {
+    // The variant doesn't exist, disable submit button.
+    // This may be an error or notice that a specific variant is not available.
+    $addToCart.addClass('disabled').prop('disabled', true);
+    $addToCartText.html({{ 'products.product.unavailable' | t | json }});
+    $quantityElements.hide();
+  }
+  if (variant) {
+    var form = jQuery('#' + selector.domIdPrefix).closest('form');
+    for (var i=0,length=variant.options.length; i<length; i++) {
+      var radioButton = form.find('.swatch[data-option-index="' + i + '"] :radio[value="' + escape(variant.options[i]) +'"]');
+      if (radioButton.size()) {
+        radioButton.get(0).checked = true;
+      }
+    }
+  }
+};
+
+/*============================================================================
+  Product Page Section
+==============================================================================*/
+universe.productPageLoad = function (section) {
+  var imagesPlaceholder = $(section).find('.product-images__placeholder'),
+    imagesContainer = $(section).find('.product-images__container'),
+    infoPlaceholder = $(section).find('.product-info__placeholder'),
+    infoContainer = $(section).find('.product-info__container'),
+    infoAccordion = $(section).find('.product-content__accordion');
+
+  // Product Info
+  if(infoAccordion.length) {
+    accordion = new Foundation.Accordion(infoAccordion);
+  }
+  universe.placeholderFadeOut(infoPlaceholder, infoContainer, false, 'show');
+
+  // Product Images Carousel
+  if($('#productImages').length && $('#productImages').first().hasClass('is-carousel')) {
+    $('#productImages').on("init", function(event, slick){
+      universe.placeholderFadeOut(imagesPlaceholder, imagesContainer, true, 'show');
+    });
+
+    $('#productImages').slick({
+       adaptiveHeight: true,
+       responsive: [
+         {
+           breakpoint: 640,
+           settings: {
+             arrows: false,
+             centerMode: true,
+             centerPadding: '40px',
+             slidesToShow: 1,
+             focusOnSelect: true,
+           }
+         }
+       ]
+      }
+    );
+
+    var productThumbsItems = $('#productImagesNav .product-thumbs__item');
+
+    {% if settings.enable_product_images_thumbs_carousel %}
+      var productImagesThumbsCarousel = true;
+    {% else %}
+      var productImagesThumbsCarousel = false;
+    {% endif %}
+
+    if (productThumbsItems.length) {
+      if (productThumbsItems.length < 6 || productImagesThumbsCarousel == false ) {
+
+        $('#productImages').on('beforeChange', function(event, slick, currentSlide, nextSlide) {
+          {% if settings.enable_img_zoom %}
+            $('.image-zoom').trigger('zoom.destroy');
+            universe.zoomInit($('.slick-slide[data-slick-index="'+nextSlide+'"] .image-zoom img').first());
+          {% endif %}
+
+          var newActiveThumb = $('.product-thumbs__item:eq('+nextSlide+')');
+          if (!newActiveThumb.hasClass('thumb-current')) {
+            $('.product-thumbs__item.thumb-current').removeClass('thumb-current');
+            $('.product-thumbs__item:eq('+nextSlide+')').addClass('thumb-current');
+          }
+        });
+
+        $('#productImagesNav .product-thumbs__item').click(function () {
+          var thumb = $(this)
+          if(!thumb.hasClass('thumb-current')) {
+            var newImageId = thumb.attr('data-thumb-id');
+            universe.changeFeaturedImg(newImageId);
+          }
+        });
+
+      } else {
+
+        $('#productImages').on('beforeChange', function(event, slick, currentSlide, nextSlide){
+          {% if settings.enable_img_zoom %}
+            $('.image-zoom').trigger('zoom.destroy');
+            universe.zoomInit($('.slick-slide[data-slick-index="'+nextSlide+'"] .image-zoom img').first());
+          {% endif %}
+        });
+
+        $('#productImages').on('afterChange', function(event, slick, currentSlide) {
+          $('#productImagesNav').slick('slickGoTo', currentSlide, true);
+        });
+
+        if($('#productImagesNav').length) {
+          $('#productImagesNav').slick({
+            slidesToShow: 4,
+            slidesToScroll: 1,
+            asNavFor: '#productImages',
+            variableWidth: true,
+            focusOnSelect: true,
+            cssEase: 'ease',
+          });
+        }
+      }
+    }
+
+
+  } else {
+    universe.placeholderFadeOut(imagesPlaceholder, imagesContainer, true, 'show');
+  }
+};
+
+/*============================================================================
+  Product Image Zoom
+==============================================================================*/
+universe.zoomInit = function (imgZoom) {
+  if (imgZoom.length && $(window).width() > 1024 ) {
+    imgZoom
+      .parent()
+      .zoom({
+        url: imgZoom.parent().attr('data-zoom')
+    });
+  }
+}
+
+universe.changeFeaturedImg = function (featuredImgId) {
+  var newImg = featuredImgId;
+  var newSlideIndex = $('#productImages div[data-img-id="'+newImg+'"]').not( ".slick-cloned" ).attr('data-slick-index');
+  if(newSlideIndex) {
+    $('#productImages').slick('slickGoTo', newSlideIndex, false);
+  }
+};
+
+universe.collectionViews = function () {
+  if (universe.cache.$changeView.length) {
+    universe.cache.$changeView.on('click', function() {
+      var view = $(this).data('view'),
+          url = document.URL,
+          hasParams = url.indexOf('?') > -1;
+
+      if (hasParams) {
+        window.location = replaceUrlParam(url, 'view', view);
+      } else {
+        window.location = url + '?view=' + view;
+      }
+    });
+  }
+};
+
+universe.loginForms = function() {
+  function showRecoverPasswordForm() {
+    universe.cache.$recoverPasswordForm.show();
+    universe.cache.$customerLoginForm.hide();
+  }
+
+  function hideRecoverPasswordForm() {
+    universe.cache.$recoverPasswordForm.hide();
+    universe.cache.$customerLoginForm.show();
+  }
+
+  universe.cache.$recoverPasswordLink.on('click', function(evt) {
+    evt.preventDefault();
+    showRecoverPasswordForm();
+  });
+
+  universe.cache.$hideRecoverPasswordLink.on('click', function(evt) {
+    evt.preventDefault();
+    hideRecoverPasswordForm();
+  });
+
+  // Allow deep linking to recover password form
+  if (universe.getHash() == '#recover') {
+    showRecoverPasswordForm();
+  }
+};
+
+universe.resetPasswordSuccess = function() {
+  universe.cache.$passwordResetSuccess.show();
+};
+
+/*============================================================================
+  Header
+==============================================================================*/
+universe.headerInit = function (section) {
+  var dropdownMenu = new Foundation.DropdownMenu($('#primary-menu')),
+  rightMenu = new Foundation.DropdownMenu($('#header-right-menu')),
+  mobileSidebar = new Foundation.OffCanvas($('#mobileMenuSidebar'));
+
+  $('.universe-mega-menu').each(function () {
+    megaMenu = new Foundation.Dropdown($(this))
+  });
+
+  {% if settings.ajax_cart_method == "drawer" %}
+    var cartSidebar = new Foundation.OffCanvas($('#cartSidebar'));
+  {% endif %}
+
+  universe.cartSidebarInit();
+
+  if ($('.main-content_fixed-header').length) {
+    universe.headerShrink();
+    universe.headerHeight();
+    $(window).resize(universe.headerHeight);
+  }
+
+  $('#mobileMenuSidebar').on('opened.zf.offcanvas', function () {
+    $('.header-container, .page-wrapper').addClass('content_pushed-right');
+  });
+
+  $('#mobileMenuSidebar').on('closed.zf.offcanvas', function () {
+    $('.header-container, .page-wrapper').removeClass('content_pushed-right');
+  });
+};
+
+universe.headerShrink = function() {
+  // ScrollMagic init controller
+  var controller = new ScrollMagic.Controller({globalSceneOptions: {duration: 0}});
+
+  // ScrollMagic build scenes
+  var stickyHeaderScene = new ScrollMagic.Scene({ triggerElement: '.main-content_fixed-header',triggerHook: 'onLeave', offset: 20})
+      .setClassToggle(".fixed-header", "shrink-header")
+      .on('leave', function () {
+        setTimeout(function() {
+          universe.headerHeight();
+        }, 201);
+      })
+      .addTo(controller);
+};
+
+universe.headerHeight = function () {
+  if($('.shrink-header').length == 0) {
+    $('.main-content_fixed-header').css('padding-top', $('.header-container').height() );
+  }
+};
+
+universe.headerSearchToggle = function (obj, evt) {
+  var container = $(obj).closest('form');
+  var searchField = container.find('input[type="search"]');
+
+  if(!container.hasClass('form-active')) {
+      container.addClass('form-active');
+      searchField.focus();
+      evt.preventDefault();
+  }
+
+  searchField.focusout(function(e) {
+    if ($(e.relatedTarget).closest("form").size() == 0) {
+      container.removeClass('form-active');
+    }
+  });
+}
+
+universe.cartSidebarInit = function () {
+  {% if settings.ajax_cart_method == "drawer" %}
+    $('#cartSidebar').on('opened.zf.offcanvas', function() {
+      ajaxCart.load();
+      $('.header-container, .page-wrapper').addClass('content_pushed-left');
+    });
+
+    $('#cartSidebar').on('closed.zf.offcanvas', function () {
+      $('.header-container, .page-wrapper').removeClass('content_pushed-left');
+    });
+  {% endif %}
+};
+
+/*============================================================================
+  Instagram
+==============================================================================*/
+universe.instagramFeed = function (section) {
+  var instagramContainer = $(section).find('.instagram-widget'),
+      photosGridContainer = $(section).find('.instagram__grid'),
+      instagramLoader = $(section).find('.instagram__grid_loader');
+  var photosCount = instagramContainer.attr('data-insta-count'),
+      token = instagramContainer.attr('data-insta-token'),
+      showCaption = instagramContainer.attr('data-insta-caption');
+
+
+  if( token.length ) {
+    $.ajax({
+      url: 'https://api.instagram.com/v1/users/self/media/recent',
+      dataType: 'jsonp',
+      type: 'GET',
+      data: {access_token: token, count: photosCount},
+      success: function(data){
+          var photoItemHtml = '';
+          for( x in data.data ){
+            var date = new Date(data.data[x].created_time * 1000);
+            var photoTimestamp = date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric'});
+
+            var imageResolution = data.data[x].images.standard_resolution;
+            var scaleClass = imageResolution.width > imageResolution.height ? 'photo__image_y' : 'photo__image_x';
+
+            photoItemHtml += '<div class="column"><div class="instagram__photo">';
+            if (showCaption == 'true') {
+              photoItemHtml += '<div class="photo__overlay"><i class="icon icon-heart">&nbsp;</i><span class="photo__likes">'+ data.data[x].likes.count +'</span>'+
+              '<span class="photo__timestamp">' + photoTimestamp + '</span>';
+              if (data.data[x].caption) {
+                photoItemHtml += '<p class="photo__caption">' + data.data[x].caption.text + '</p>';
+              }
+              photoItemHtml += '</div>';
+            }
+            photoItemHtml += '<a class="photo__link" href="' + data.data[x].link + '" target="_blank"></a>';
+            photoItemHtml += '<img class="photo__image ' + scaleClass + '" src="' + data.data[x].images.standard_resolution.url + '">';
+            photoItemHtml += '</div></div>';
+
+          }
+          instagramLoader.fadeOut().promise().done(function () {
+            photosGridContainer.html(photoItemHtml);
+            instagramLoader.remove();
+            universe.animateAppear(photosGridContainer, 'show');
+          });
+      },
+      error: function(data){
+          console.log(data);
+      }
+    });
+  }
+};
+
+/*============================================================================
+  Google Maps
+==============================================================================*/
+universe.newMap = function ( jQueryel, location ) {
+  var map = new google.maps.Map(jQueryel[0], {
+    zoom: 14,
+    disableDefaultUI: true,
+    center: location,
+    scrollwheel: false,
+    zoomControl: true,
+    zoomControlOptions: {
+        position: google.maps.ControlPosition.LEFT_CENTER
+    }
+  });
+  var marker = new google.maps.Marker({
+    position: location,
+    map: map
+  });
+
+  if($(window).width() > 1024) {
+    map.panBy(270, 0);
+  }
+
+  $(window).resize(function () {
+    if($(window).width() > 1024) {
+      map.setCenter(location);
+      map.panBy(270, 0);
+    } else {
+      map.setCenter(location);
+    }
+  });
+
+  return map;
+}
+
+universe.geolocate = function (jQueryel) {
+  var geocoder = new google.maps.Geocoder();
+  var address = $(jQueryel[0]).attr('data-address-setting');
+
+  geocoder.geocode({ address: address }, function(results, status) {
+    if (status !== google.maps.GeocoderStatus.OK) {
+      return false;
+    }
+    universe.newMap(jQueryel, results[0].geometry.location);
+  });
+}
+
+var maps_api_init = 0;
+var maps_api_ready = 0;
+
+universe.mapsInit = function (section) {
+  var map = null;
+  var mapContainer = $(section).find('.map__container').first();
+  if(mapContainer.length) {
+    var api_key = $(mapContainer).attr('data-api-key');
+    if(api_key.length && mapContainer.length) {
+      if (!maps_api_ready) {
+        maps_api_init = 1;
+        $.getScript(
+          'https://maps.googleapis.com/maps/api/js?key=' + api_key
+        ).done(function() {
+          maps_api_ready = 1;
+          $('.map__container').each(function () {
+            universe.geolocate($(this));
+          });
+        });
+      }
+    }
+  }
+};
+
+/*============================================================================
+  Youtube
+==============================================================================*/
+var youtube_api_ready = 0;
+
+function onYouTubeIframeAPIReady() {
+  youtube_api_ready = 1;
+
+  universe.ytSectionsInit();
+}
+
+universe.ytSectionsInit = function() {
+  universe.loadVideo();
+
+  $('.hero-section_video').each(function () {
+    loadBackgroundVideo($(this));
+  });
+}
+
+universe.videoApi = function() {
+  var tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  $('body').append(tag);
+};
+
+function onBgVideoReady(evt) {
+  var videoData = $(evt.target.h).attr('id');
+
+  $('#' + videoData).attr('tabindex', '-1');
+  evt.target.mute();
+  evt.target.playVideo();
+  // evt.target.setPlaybackQuality('hd720');
+
+}
+
+function onPlayerChange(evt) {
+  if (evt.data == 0) {
+    evt.target.seekTo(0);
+  }
+}
+
+function getVideoOptions(evt) {
+  return $('.homepage-hero .background__video[data-id=' + evt.target.h.id + ']');
+}
+
+window.loadBackgroundVideo = universe.loadBackgroundVideo = function (section) {
+  var bg_video = $(section).find('.background__video');
+
+  if( bg_video.length) {
+    bg_video.each( function () {
+      var key = $(this).attr('id')
+      var video = $(this).attr('data-id');
+
+      var args = {
+        ratio: 16 / 9,
+        videoId: video,
+        playerVars: {
+          playsinline: 1,
+          cc_load_policy: 0,
+          iv_load_policy: 3,
+          modestbranding: 0,
+          controls: 0,
+          showinfo: 0,
+          fs: 0,
+          wmode: 'opaque',
+          branding: 0,
+          autoplay: 1,
+          autohide: 0,
+          quality: 'hd720',
+          rel: 0
+        },
+        events: {
+          'onReady': onBgVideoReady,
+          'onStateChange': onPlayerChange
+        }
+      };
+
+      var videoPlayer = new YT.Player(key, args);
+
+      function setVideoHeight () {
+        var videoContainer = $('.background__video[id="'+key+'"]');
+        var videoHeight = $(window).width() * 9 / 16;
+
+        videoWrap = videoContainer.parents('.section').first();
+
+        if (videoWrap.outerHeight() < videoHeight) {
+          videoContainer.css('width', '100%');
+          videoContainer.css('height', $(window).width() * 9 / 16 );
+        } else {
+          videoContainer.css('width', videoWrap.outerHeight() * 16 / 9 );
+          videoContainer.css('height', '200%' );
+        }
+      }
+
+      setVideoHeight();
+      $(window).resize( function () {
+        setVideoHeight();
+      });
+
+    });
+  }
+}
+
+function onVideoReady(evt) {
+  var videoData = getVideoOptions(evt);
+  var videoCover = $('#' + evt.target.a.id).parents().first().find('.video__cover').first();
+  evt.target.setPlaybackQuality('hd1080');
+
+  videoCover.find('.video__play-button').click( function () {
+    videoCover.hide();
+    $('#' + evt.target.a.id).addClass('youtube-video_started');
+    evt.target.playVideo();
+  });
+}
+
+universe.loadVideo = function () {
+  var yt_video = $('.video-section .video__iframe');
+  if( yt_video.length) {
+    yt_video.each( function () {
+      var key = $(this).attr('id');
+      var video = $(this).attr('data-id');
+      var args = {
+        ratio: 16 / 9,
+        videoId: video,
+        playerVars: {
+          iv_load_policy: 3,
+          modestbranding: 1,
+          rel: 0
+        },
+        events: {
+          onReady: onVideoReady
+        }
+      };
+
+      var videoPlayer = new YT.Player(key, args);
+
+      function setVideoHeight () {
+        var videoContainer = $('.video__iframe[id="'+key+'"]');
+        var videoHeight = videoContainer.width() * 9 / 16;
+        videoContainer.css('height', videoHeight);
+      }
+
+      setVideoHeight();
+      $(window).resize( function () { setVideoHeight(); });
+    });
+  }
+}
+
+/*============================================================================
+  Placeholders
+==============================================================================*/
+universe.placeholderFadeOut = function(placeholder, contentContainer, maxHeight, appearStyle) {
+  placeholder.fadeOut().promise().done(function () {
+    placeholder.remove();
+    if( maxHeight ) { contentContainer.css('max-height', '100%'); }
+    universe.animateAppear(contentContainer, appearStyle);
+  });
+}
+
+/*============================================================================
+  Homepage Slider
+==============================================================================*/
+universe.homepageSlider = function (section) {
+  var slider = $(section).find('.homepage-slider');
+  var sliderLoader = $(section).find('.slider__preloader');
+
+  if($(slider).length) {
+    $(slider).on("init", function(event, slick){
+      universe.placeholderFadeOut(sliderLoader, slider, false, 'show');
+    });
+    $(slider).slick({
+      dots: true,
+      infinite: true,
+      speed: 500,
+      fade: true,
+      pauseOnHover: false,
+      cssEase: 'linear'
+    });
+  }
+}
+
+/*============================================================================
+  Featured Products & Collections Carousels
+==============================================================================*/
+universe.featuredCarousel = function (section) {
+  var featuredGrid = $(section).find('.featured__grid');
+  var gridLoader = $(section).find('.featured__grid_loader');
+
+  if($(featuredGrid).hasClass('featured-carousel')) {
+    $(featuredGrid).on("init", function(event, slick){
+      gridLoader.fadeOut().promise().done(function () {
+        gridLoader.remove();
+        featuredGrid.parents('.featured__grid__wrap').first().css('max-height', '100%');
+        universe.animateAppear(featuredGrid, 'show');
+      });
+    });
+
+    $(featuredGrid).slick({
+      adaptiveHeight: true,
+      responsive: [
+       {
+         breakpoint: 750,
+         settings: {
+           arrows: false,
+           centerMode: true,
+           centerPadding: '40px',
+           slidesToShow: 1,
+           focusOnSelect: true
+         }
+       }
+     ]
+    });
+  } else {
+    gridLoader.fadeOut().promise().done(function () {
+      gridLoader.remove();
+      featuredGrid.parents('.featured__grid__wrap').first().css('max-height', '100%');
+      universe.animateAppear(featuredGrid, 'show');
+    });
+  }
+}
+
+/*============================================================================
+  Mobile Carousel for Related products
+==============================================================================*/
+universe.featuredCarouselMobile = function (section) {
+  var featuredGrid = $(section).find('.featured__grid');
+
+  if($(featuredGrid).hasClass('featured-carousel')) {
+    universe.mobileCarouselInit($(featuredGrid));
+    $(window).resize( function() {
+      universe.mobileCarouselInit($(featuredGrid));
+    });
+  }
+}
+
+universe.mobileCarouselInit = function (carousel) {
+  if ($(window).width() > 750) {
+    if (carousel.hasClass('slick-initialized')) {
+      carousel.slick('unslick');
+    }
+  }
+  if (!carousel.hasClass('slick-initialized')) {
+    carousel.slick({
+      adaptiveHeight: true,
+      infinite: true,
+      mobileFirst: true,
+      arrows: false,
+      centerMode: true,
+      centerPadding: '40px',
+      slidesToShow: 1,
+      focusOnSelect: true,
+      responsive: [
+       {
+         breakpoint: 750,
+         settings: "unslick"
+       }
+      ]
+    });
+  }
+}
+
+/*============================================================================
+  Quick Add To Cart button: Ajax cart reinit
+==============================================================================*/
+universe.ajaxCartReInit = function () {
+  {% if settings.ajax_cart_method == "drawer" %}
+    {% if settings.enable_quick_add_to_cart_desktop or settings.enable_quick_add_to_cart_mobile %}
+      ajaxCart.init({
+        formSelector: 'form[action^="/cart/add"]',
+        cartContainer: '#cartSidebarContainer',
+        addToCartSelector: '.addToCartButton',
+        cartCountSelector: '#CartCount',
+        cartCostSelector: '#CartCost',
+        moneyFormat: {{ shop.money_format | json }}
+      });
+    {% endif %}
+  {% endif %}
+}
+
+/*============================================================================
+  Content Animations
+==============================================================================*/
+var scrollMagicController = new ScrollMagic.Controller();
+
+universe.animateAppear = function (element, appearStyle) {
+  elem = $(element).get(0);
+
+  if ($(elem).length) {
+    switch (appearStyle) {
+      case 'show':
+        var tween = TweenMax.to(elem, 0.7, {opacity:1});
+        break;
+      case 'up':
+        var tween = TweenMax.fromTo(elem, 0.5, {y:'50px'}, {opacity:1, y:0});
+        break;
+      case 'left':
+        var tween = TweenMax.fromTo(elem, 0.7, {x:'-50px'}, {opacity:1, x:0});
+        break;
+      case 'right':
+        var tween = TweenMax.fromTo(elem, 0.7, {x:'50px'}, {opacity:1, x:0});
+        break;
+      default:
+        break;
+    }
+
+    var showScene = new ScrollMagic.Scene({
+        offset: 60,
+        triggerElement: elem,
+        reverse: false,
+        triggerHook: 1
+    })
+      .setTween(tween)
+      .addTo(scrollMagicController);
+  }
+};
+
+/*============================================================================
+  Custom Page Sections
+==============================================================================*/
+universe.pageSections = function (section) {
+  //Featured Products
+  $('div[data-block-type="featured-products"]').each(function () {
+    universe.featuredCarousel($(this));
+  });
+
+  //Instagram Feed
+  $(section).find('div[data-block-type="instagram-feed"]').each(function () {
+    universe.instagramFeed($(this));
+  });
+
+  //Google Maps
+  $('div[data-block-type="google-map"]').each(function () {
+    if (maps_api_ready) {
+      $('.map__container').each(function () {
+        universe.geolocate($(this));
+      });
+    } else {
+      if (!maps_api_init) {
+        universe.mapsInit($(this));
+      }
+    }
+  });
+
+  $('.product-page_embedded').each(function () {
+    universe.productPageLoad($(this));
+  });
+
+  if ($('.background__video, .video__iframe').length) {
+    if (youtube_api_ready) {
+      if ($('div[data-block-type="youtube-video"]').length ) {
+        universe.loadVideo();
+      }
+      $('div[data-block-type="hero"]').each(function () {
+        if($(this).hasClass('hero-section_video')) {
+          universe.loadBackgroundVideo($(this));
+        }
+      });
+    } else {
+      if (!$('script[src="https://www.youtube.com/iframe_api"]').length) {
+        universe.videoApi();
+      }
+    }
+  }
+};
+
+/*============================================================================
+  Animated Icons
+==============================================================================*/
+universe.animatedIconsInit = function () {
+  {% if settings.enable_animated_icons %}
+    var asset_url = "{{ 'universe.js.liquid' | asset_url }}"
+    var asset_url_index = asset_url.indexOf('universe.js.liquid');
+    var baseAssetUrl = asset_url.slice(0, asset_url_index);
+
+    $('.animated-icon').each(function(e) {
+      var animationEl = $(this),
+      iconName = animationEl.attr('data-icon'),
+      animationContainer = $(this)[ 0 ];
+
+      if (!animationEl.hasClass('__enabled')) {
+        var animation = bodymovin.loadAnimation({
+          container: animationContainer,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: baseAssetUrl+iconName+'.json'
+        });
+      }
+      animationEl.addClass('__enabled');
+    });
+  {% endif %}
+}
+
+/*============================================================================
+  Theme Init
+==============================================================================*/
+var sections = new theme.Sections();
+
+$(document).ready(function() {
+  universe.init();
+
+  sections.register('header', function (section) {
+    var headerAttrs = JSON.stringify(getAttributes($('#shopify-section-header')));
+    if (headerAttrs.indexOf("data-theme-editor-section") >= 0) {
+      if(!$('body').hasClass('editor-page')) {
+        $('body').addClass('editor-page');
+      }
+    }
+    universe.headerInit(section);
+
+    //Google Maps
+    $('div[data-block-type="mega-menu-google-map"]').each(function () {
+      if (maps_api_ready) {
+        $('.map__container').each(function () {
+          universe.geolocate($(this));
+        });
+      } else {
+        if (!maps_api_init) {
+          universe.mapsInit($(this));
+        }
+      }
+    });
+
+    universe.animatedIconsInit();
+  });
+
+  sections.register('homepage-slider', function (section) {
+    universe.homepageSlider(section);
+  });
+
+  var pageTemplateSection = sections.register('page-template', function (section) {
+    universe.pageSections(section);
+  });
+
+  sections.register('product-page', function (section) {
+    universe.productPageLoad(section);
+
+    {% if settings.ajax_cart_method == "drawer" %}
+      if($('.editor-page').length) {
+        ajaxCart.init({
+         formSelector: '#AddToCartForm',
+         cartContainer: '#cartSidebarContainer',
+         addToCartSelector: '#AddToCart',
+         cartCountSelector: '#CartCount',
+         cartCostSelector: '#CartCost',
+         moneyFormat: {{ shop.money_format | json }}
+        });
+      }
+    {% endif %}
+  });
+
+  sections.register('featured-products', function (section) {
+    universe.featuredCarousel(section);
+  });
+
+  sections.register('featured-collections', function (section) {
+    universe.featuredCarousel(section);
+  });
+
+  sections.register('instagram-feed', function (section) {
+    universe.instagramFeed(section);
+  });
+
+  sections.register('google-map', function (section) {
+    if (maps_api_ready) {
+      $('.map__container').each(function () {
+        universe.geolocate($(this));
+      });
+    } else {
+      if (!maps_api_init) {
+        universe.mapsInit(section);
+      }
+    }
+  });
+
+  sections.register('youtube-video', function (section) {
+    if (youtube_api_ready) {
+      universe.loadVideo();
+    } else {
+      if (!$('script[src="https://www.youtube.com/iframe_api"]').length) {
+        universe.videoApi();
+      }
+    }
+  });
+
+  sections.register('hero', function (section) {
+    if( $(section).hasClass('hero-section_video')) {
+      if (youtube_api_ready) {
+        universe.loadBackgroundVideo(section);
+      } else {
+        if (!$('script[src="https://www.youtube.com/iframe_api"]').length) {
+          universe.videoApi();
+        }
+      }
+    }
+  });
+
+  $(document).on('shopify:section:select', function () {
+    if(!$('body').hasClass('editor-page')) {
+      $('body').addClass('editor-page');
+    }
+  });
+
+  function getAttributes ( $node ) {
+    var attrs = {};
+    $.each($node[0].attributes, function ( index, attribute ) {
+      attrs[attribute.name] = attribute.value;
+    });
+    return attrs;
+  }
+
+  if(!$('.editor-page').length) {
+    $('.js-animate-appear-left').each(function(index, elem){
+      universe.animateAppear(elem, 'left');
+    });
+
+    $('.js-animate-appear-right').each(function(index, elem){
+      universe.animateAppear(elem, 'right');
+    });
+
+    $('.js-animate-appear-show').each(function(index, elem){
+      universe.animateAppear(elem, 'show');
+    });
+
+    $('.js-animate-appear-up').each(function(index, elem){
+      universe.animateAppear(elem, 'up');
+    });
+
+    $('.js-animate-load-bottom').each(function(index, elem){
+      TweenMax.fromTo(elem, 0.5, {y:'50px'}, {opacity:1, y:0}).delay(1.5);
+    });
+  }
+
+  if($('.editor-page').length) {
+    sections.register('features', function (section) {
+      universe.animatedIconsInit();
+    });
+    sections.register('image-text', function (section) {
+      universe.animatedIconsInit();
+    });
+    sections.register('cta-section', function (section) {
+      universe.animatedIconsInit();
+    });
+  }
+
+});
+
+    

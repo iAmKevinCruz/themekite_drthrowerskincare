@@ -1,0 +1,49 @@
+{% if the_collection == blank %}
+  {% assign the_collection = collection %}
+{% endif %}
+
+{% unless grid_item_width %}
+  {% assign grid_item_width = 'small-12 medium-3 large-3 columns' %}
+{% endunless %}
+
+{% if the_collection.title != blank %}
+  <div class="{{ grid_item_width }} text-center collection-grid-item">
+    {% capture collection_title %}{{ the_collection.title | escape }}{% endcapture %}
+    <a href="{{ the_collection.url }}" title="{{ 'collections.general.link_title' | t: title: collection_title }}" class="collection-image">
+      {% if the_collection.image %}
+        {%- assign img_url = the_collection.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+        <img class="lazyload"
+             src="{{ the_collection.image | img_url: '300x300' }}"
+             data-src="{{ img_url }}"
+             data-widths="[180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
+             data-aspectratio="{{ the_collection.image.aspect_ratio }}"
+             data-sizes="auto"
+             alt="{{ collection_title | escape }}">
+      {% else %}
+        {% if the_collection.products.size > 0 %}
+          {%- assign img_url = the_collection.products.first.featured_image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+          {% if img_url != blank %}
+            <img class=" lazyload"
+                 src="{{ the_collection.products.first.featured_image | img_url: '300x300' }}"
+                 data-src="{{ img_url }}"
+                 data-widths="[180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
+                 data-aspectratio="{{ the_collection.products.first.featured_image.aspect_ratio }}"
+                 data-sizes="auto"
+                 alt="{{ collection_title | escape }}">
+           {% endif %}
+         {% endif %}
+      {% endif %}
+    </a>
+    <div class="collection-desc">
+      <h4 class="section__text-style collection__title">
+        <a href="{{ the_collection.url }}" title="{{ 'collections.general.link_title' | t: title: collection_title }}">{{ the_collection.title }}</a>
+      </h4>
+
+      {% if show_count %}
+        <a class="section__text-style collection__count" href="{{ the_collection.url }}" title="{{ 'collections.general.link_title' | t: title: collection_title }}">
+          {{ 'collections.general.items_with_count' | t: count: the_collection.all_products_count }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

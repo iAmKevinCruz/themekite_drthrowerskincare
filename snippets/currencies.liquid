@@ -1,0 +1,78 @@
+<script>
+var currencySelect = $('#CurrencySwitch');
+    currencySelectMobile = $('#CurrencySwitchMobile');
+
+// money_format or money_with_currency_format
+Currency.format = 'money_format';
+
+var shopCurrency = '{{ shop.currency }}';
+
+/* Sometimes merchants change their shop currency, let's tell our JavaScript file */
+Currency.moneyFormats[shopCurrency].money_with_currency_format = {{ shop.money_with_currency_format | strip_html | json }};
+Currency.moneyFormats[shopCurrency].money_format = {{ shop.money_format | strip_html | json }};
+
+var cookieCurrency = Currency.cookie.read();
+
+// Fix for customer account pages.
+jQuery('span.money span.money').each(function() {
+  jQuery(this).parents('span.money').removeClass('money');
+});
+
+// Saving the current price.
+jQuery('span.money').each(function() {
+  jQuery(this).attr('data-currency-{{ shop.currency }}', jQuery(this).html());
+});
+
+// If there's no cookie or it's the shop currency.
+if (cookieCurrency == null || cookieCurrency === shopCurrency) {
+  currencySelect.val(shopCurrency);
+  currencySelectMobile.val(shopCurrency);
+  Currency.currentCurrency = shopCurrency;
+}
+else {
+  Currency.convertAll(shopCurrency, cookieCurrency);
+  currencySelect.val(cookieCurrency);
+  currencySelectMobile.val(cookieCurrency);
+}
+
+currencySelect.on('change',function() {
+  var newCurrency =  $(this).val();
+  currencySelectMobile.val($(this).val());
+  Currency.convertAll(Currency.currentCurrency, newCurrency);
+});
+
+currencySelectMobile.on('change',function() {
+  var newCurrency =  $(this).val();
+  currencySelect.val($(this).val());
+  Currency.convertAll(Currency.currentCurrency, newCurrency);
+});
+
+var variantCurrencyUpdate = function(variant, selector) {
+  jQuery('span.money-variant-update').each(function() {
+    jQuery(this).attr('data-currency-{{ shop.currency }}', jQuery(this).html());
+  });
+  Currency.convertAll(shopCurrency, currencySelect.val());
+};
+
+var relatedProductsCurrencyUpdate = function(variant, selector) {
+  jQuery('.related-products span.money').each(function() {
+    jQuery(this).attr('data-currency-{{ shop.currency }}', jQuery(this).html());
+  });
+  Currency.convertAll(shopCurrency, currencySelect.val());
+  {% if settings.ajax_cart_method == "drawer" %}
+    ajaxCart.init({
+      formSelector: 'form[action^="/cart/add"]',
+      cartContainer: '#cartSidebarContainer',
+      addToCartSelector: '.addToCartButton',
+      cartCountSelector: '#CartCount',
+      cartCostSelector: '#CartCost',
+      moneyFormat: {{ shop.money_format | json }}
+    });
+  {% endif %}
+};
+
+jQuery(document.body).on('afterCartLoad.ajaxCart', function(cart) {
+  Currency.convertAll(shopCurrency, currencySelect.val());
+});
+
+</script>

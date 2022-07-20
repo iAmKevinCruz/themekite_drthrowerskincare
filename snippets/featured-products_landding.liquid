@@ -1,0 +1,74 @@
+<div class="content-section__inner">
+  {% unless snippet_instance.settings.title == blank %}
+    <div class="row columns text-{{ snippet_instance.settings.text_alignment }}">
+      <h2 class="section-title section__title-style">{{ snippet_instance.settings.title }}</h2>
+      <p class="sec-sub-heading">{{snippet_instance.settings.title_description}}</p>
+      {{snippet_instance.settings.description}}
+    </div>
+  {% endunless %}
+
+  {% case snippet_instance.settings.grid %}
+    {% when '2' %}
+      {% assign carousel_settings = '{"slidesToShow": 2}' %}
+      {% assign grid_settings = 'row small-up-1 medium-up-2 large-up-2' %}
+    {% when '3' %}
+      {% assign carousel_settings = '{"slidesToShow": 3}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-3 large-up-3' %}
+    {% when '4' %}
+      {% assign carousel_settings = '{"slidesToShow": 4}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-4 large-up-4' %}
+    {% when '5' %}
+      {% assign carousel_settings = '{"slidesToShow": 5}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-5 large-up-5' %}
+    {% when '6' %}
+      {% assign carousel_settings = '{"slidesToShow": 6}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-6 large-up-6' %}
+  {% endcase %}
+
+  <div class="content-placeholder {{ grid_settings }} featured__grid_loader {% if snippet_instance.settings.is_carousel %}featured__carousel_loader{% endif %}">
+    {% if snippet_instance.settings.is_carousel %}
+      {% assign placeholders_count = snippet_instance.settings.grid %}
+    {% else %}
+      {% assign placeholders_count = snippet_instance.settings.total %}
+    {% endif %}
+    {% for i in (1..placeholders_count ) %}
+      <div class="product-loop-item column placeholder-loading">
+        {%- include 'placeholder-image' -%}
+        {%- include 'placeholder-text' -%}
+      </div>
+    {% endfor %}
+  </div>
+
+  {% assign collection_id = snippet_instance.settings.collection %}
+  {% if collection_id == blank %}
+    {% assign collection_id = 'frontpage' %}
+  {% endif %}
+
+  {% if collections[collection_id].products.size > 0 %}
+    <div class="featured__grid__wrap preloaded__content">
+      <div class="{{ grid_settings }} featured__grid js-animate-appear {% if snippet_instance.settings.is_carousel %}featured-carousel1{% endif %}" data-slick1='{{ carousel_settings }}'>
+        {% assign grid_item_width = 'column column-block' %}
+        {% for product in collections[collection_id].products limit:snippet_instance.settings.total %}
+          {% include 'product-grid-item_landing', the_product: product, step:snippet_instance.settings.step  %}
+        {% endfor %}
+      </div>
+
+      {% if snippet_instance.settings.display_see_more_btn and snippet_instance.settings.see_more_btn_text != blank %}
+        <div class="row columns featured__show-all text-center">
+          {% include 'button-style', button_id: snippet_instance.id, btn_bg_color: snippet_instance.settings.btn_bg_color, btn_style: snippet_instance.settings.btn_style, btn_text_color: snippet_instance.settings.btn_text_color %}
+          <a id="button-{{snippet_instance.id}}" href="{{snippet_instance.settings.btn_url}}{%comment%}{{ collections[collection_id].url }}{%endcomment%}" class="undeline-ps {% if snippet_instance.settings.btn_style == '' %}hollow{% endif %}" title="{{ snippet_instance.settings.see_more_btn_text }}">{{ snippet_instance.settings.see_more_btn_text }}</a>
+        </div>
+      {% endif %}
+      
+    </div>
+
+  {% else %}
+
+    {% unless emptyState %}
+      {{ 'theme-onboarding.css' | global_asset_url | stylesheet_tag }}
+      {% assign emptyState = true %}
+    {% endunless %}
+    {% include 'onboarding-featured-products' %}
+
+  {% endif %}
+</div>

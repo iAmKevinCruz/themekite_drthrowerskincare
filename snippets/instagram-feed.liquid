@@ -1,0 +1,35 @@
+
+<div class="section__wrap instagram-widget"
+data-insta-count="{{ snippet_instance.settings.total }}" data-insta-token="{{ snippet_instance.settings.access_token }}"
+data-insta-caption="{{ snippet_instance.settings.pic_info }}">
+  {% unless snippet_instance.settings.title == blank %}
+    <div class="row columns text-{{snippet_instance.settings.title_alignment }}">
+      <h2 class="section-title section__title-style">{{ snippet_instance.settings.title }}</h2>
+    </div>
+  {% endunless %}
+
+  {% case snippet_instance.settings.row_size %}
+    {% when '4' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-4 large-up-4' %}
+    {% when '5' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-5 large-up-5' %}
+    {% when '6' %}
+      {% assign grid_settings = 'row small-up-3 medium-up-6 large-up-6' %}
+  {% endcase %}
+
+  <div class="content-placeholder {{ grid_settings }} instagram__grid_loader">
+    {% for i in (1..snippet_instance.settings.total ) %}
+    <div class="column placeholder-loading">
+      <div class="placeholder__image__container">
+        <div class="placeholder__image placeholder__shimmer">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <path d="M464 64H48C21.49 64 0 85.49 0 112v288c0 26.51 21.49 48 48 48h416c26.51 0 48-21.49 48-48V112c0-26.51-21.49-48-48-48zm-6 336H54a6 6 0 0 1-6-6V118a6 6 0 0 1 6-6h404a6 6 0 0 1 6 6v276a6 6 0 0 1-6 6zM128 152c-22.091 0-40 17.909-40 40s17.909 40 40 40 40-17.909 40-40-17.909-40-40-40zM96 352h320v-80l-87.515-87.515c-4.686-4.686-12.284-4.686-16.971 0L192 304l-39.515-39.515c-4.686-4.686-12.284-4.686-16.971 0L96 304v48z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="{{ grid_settings }} instagram__grid js-animate-appear"></div>
+</div>

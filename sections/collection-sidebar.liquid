@@ -1,0 +1,357 @@
+<div data-section-id="{{ section.id }}" data-section-type="collection-sidebar">
+  <div class="row columns show-for-small-only mobile-sidebar-toggle">
+    <a data-toggle="collection-sidebar-content"><i class="icon icon-sliders"></i> {{ section.settings.mobile_sidebar_title }}</a>
+  </div>
+
+  <div id="collection-sidebar-content" data-toggler=".sidebar-is-open">
+    {% for block in section.blocks %}
+      {% case block.type %}
+
+        {% comment %}
+          Tags
+        {% endcomment %}
+        {% when 'product-tags' %}
+          <div {{ block.shopify_attributes }}>
+            {% if block.settings.display_inside_collections == false or collection.handle != 'all' %}
+              {% if collection.all_tags.size > 0 %}
+                <div class="collection-widget product-tags-widget">
+                  {% unless block.settings.title == blank %}
+                    <h3 class="widget__title">{{ block.settings.title }}</h3>
+                  {% endunless %}
+
+                  <ul class="no-bullets">
+                    <li{% unless current_tags %} class="__active"{% endunless %}>
+                      {% if collection.handle %}
+                        <a href="/collections/{{ collection.handle }}">
+                          {{ 'collections.sidebar.all_of_tags' | t }}
+                        </a>
+                      {% endif %}
+                    </li>
+
+                    {% for tag in collection.all_tags %}
+                      <li class="{% if current_tags contains tag %}__active{% endif %}">
+                        {{ tag | capitalize | link_to_tag: tag }}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
+            {% endif %}
+          </div>
+
+        {% comment %}
+          Collections list
+        {% endcomment %}
+        {% when 'product-collections' %}
+          <div {{ block.shopify_attributes }}>
+            {% if collections.size %}
+              <div class="collection-widget product-collections-widget">
+                {% unless block.settings.title == blank %}
+                  <h3 class="widget__title">{{ block.settings.title }}</h3>
+                {% endunless %}
+                <ul class="no-bullets">
+                  {% for the_collection in collections %}
+                    {% comment %} if the_collection.handle and the_collection.handle != 'frontpage' {% endcomment %}
+                    {% if the_collection.handle %}
+                      <li{% if the_collection.handle == collection.handle %} class="__active"{% endif %}>
+                        <a href="{{ the_collection.url }}">
+                          {{ the_collection.title }}
+                        </a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </div>
+
+        {% comment %}
+          Product types list
+        {% endcomment %}
+        {% when 'product-types' %}
+          <div {{ block.shopify_attributes }}>
+            {% if shop.types.size %}
+              <div class="collection-widget product-types-widget">
+                {% unless block.settings.title == blank %}
+                  <h3 class="widget__title">{{ block.settings.title }}</h3>
+                {% endunless %}
+                <ul class="no-bullets">
+                  {% for product_type in shop.types %}
+                  <li {% if product_type == collection.title %} class="__active"{% endif %}>
+                    {{ product_type | link_to_type }}
+                  </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </div>
+
+        {% comment %}
+          Product vendors list
+        {% endcomment %}
+        {% when 'product-vendors' %}
+          <div {{ block.shopify_attributes }}>
+            {% if shop.vendors.size %}
+              <div class="collection-widget product-vendors-widget">
+                {% unless block.settings.title == blank %}
+                  <h3 class="widget__title">{{ block.settings.title }}</h3>
+                {% endunless %}
+                <ul class="no-bullets">
+                  {% for product_vendor in shop.vendors %}
+                  <li {% if product_vendor == collection.title %} class="__active"{% endif %}>
+                    {{ product_vendor | link_to_vendor }}
+                  </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </div>
+
+        {% comment %}
+          Custom Menu
+        {% endcomment %}
+        {% when 'custom-menu' %}
+          <div {{ block.shopify_attributes }}>
+            <div class="collection-widget">
+              {% unless block.settings.title == blank %}
+                <h3 class="widget__title">{{ block.settings.title }}</h3>
+              {% endunless %}
+              <ul class="no-bullets">
+                {% for link in linklists[block.settings.menu_id].links %}
+                  <li {% if link.active %} class="__active"{% endif %}>
+                    <a href="{{ link.url }}">{{ link.title }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+
+        {% comment %}
+          Text Widget
+        {% endcomment %}
+        {% when 'text-widget' %}
+          <div {{ block.shopify_attributes }}>
+            <div class="collection-widget collection__text-widget">
+              {% unless block.settings.title == blank %}
+                <h3 class="widget__title">{{ block.settings.title }}</h3>
+              {% endunless %}
+              {% unless block.settings.content == blank %}
+                <div>
+                  {{ block.settings.content }}
+                </div>
+              {% endunless %}
+            </div>
+          </div>
+
+        {% comment %}
+          Sorting select
+        {% endcomment %}
+        {% when 'sorting-select' %}
+          {% unless template == 'search' or template contains 'list-collections' %}
+            <div {{ block.shopify_attributes }}>
+              <div class="collection-widget collection__text-widget">
+                {% unless block.settings.title == blank %}
+                  <h3 class="widget__title">{{ block.settings.title }}</h3>
+                {% endunless %}
+
+                <div class="collection-sidebar-sorting">
+                  <select name="SortBy" id="SortBySidebar">
+                    <option value="manual">{{ 'collections.sorting.featured' | t }}</option>
+                    <option value="best-selling">{{ 'collections.sorting.best_selling' | t }}</option>
+                    <option value="title-ascending">{{ 'collections.sorting.az' | t }}</option>
+                    <option value="title-descending">{{ 'collections.sorting.za' | t }}</option>
+                    <option value="price-ascending">{{ 'collections.sorting.price_ascending' | t }}</option>
+                    <option value="price-descending">{{ 'collections.sorting.price_descending' | t }}</option>
+                    <option value="created-descending">{{ 'collections.sorting.date_descending' | t }}</option>
+                    <option value="created-ascending">{{ 'collections.sorting.date_ascending' | t }}</option>
+                  </select>
+                </div>
+
+                <script>
+                  Shopify.queryParams = {};
+                  if (location.search.length) {
+                    for (var aKeyValue, i = 0, aCouples = location.search.substr(1).split('&'); i < aCouples.length; i++) {
+                      aKeyValue = aCouples[i].split('=');
+                      if (aKeyValue.length > 1) {
+                        Shopify.queryParams[decodeURIComponent(aKeyValue[0])] = decodeURIComponent(aKeyValue[1]);
+                      }
+                    }
+                  }
+
+                  $(function() {
+                    $('#SortBySidebar')
+                      .val('{{ collection.sort_by | default: collection.default_sort_by }}')
+                      .bind('change', function() {
+                        Shopify.queryParams.sort_by = jQuery(this).val();
+                        location.search = jQuery.param(Shopify.queryParams);
+                      }
+                    );
+                  });
+                </script>
+
+              </div>
+            </div>
+          {% endunless %}
+
+        {% comment %}
+          HTML Widget
+        {% endcomment %}
+        {% when 'html-widget' %}
+          <div {{ block.shopify_attributes }}>
+            <div class="collection-widget">
+              {% unless block.settings.title == blank %}
+                <h3 class="widget__title">{{ block.settings.title }}</h3>
+              {% endunless %}
+              {% unless block.settings.html == blank %}
+                {{ block.settings.html }}
+              {% endunless %}
+            </div>
+          </div>
+
+      {% endcase %}
+    {% endfor %}
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Collection Sidebar",
+    "settings": [
+      {
+        "type": "text",
+        "id": "mobile_sidebar_title",
+        "label": "Mobile Sidebar Title",
+        "default": "Filters"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "product-tags",
+        "name": "Product Tags Filter",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Filter Tags"
+          },
+          {
+            "type": "checkbox",
+            "id": "display_inside_collections",
+            "label": "Display tags only inside collections",
+            "default": false,
+            "info": "If checked the tags navigation will be hidden on /collections/all page."
+          }
+        ]
+      },
+      {
+        "type": "product-collections",
+        "name": "Collections List",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Collections"
+          }
+        ]
+      },
+      {
+        "type": "product-types",
+        "name": "Product Types List",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Types"
+          }
+        ]
+      },
+      {
+        "type": "product-vendors",
+        "name": "Product Vendors List",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Vendors"
+          }
+        ]
+      },
+      {
+        "type": "custom-menu",
+        "name": "Menu",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Custom Menu"
+          },
+          {
+            "type": "link_list",
+            "id": "menu_id",
+            "label": "Choose Menu"
+          }
+        ]
+      },
+      {
+        "type": "text-widget",
+        "name": "Text Widget",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Custom Text"
+          },
+          {
+            "type": "richtext",
+            "id": "content",
+            "label": "Content"
+          }
+        ]
+      },
+      {
+        "type": "sorting-select",
+        "name": "Sorting Select",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Sort By"
+          }
+        ]
+      },
+      {
+        "type": "html-widget",
+        "name": "HTML Widget",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title",
+            "default": "Custom Html"
+          },
+          {
+            "type": "html",
+            "id": "html",
+            "label": "Html"
+          }
+        ]
+      }
+    ],
+    "default": {
+      "blocks": [
+        {
+          "type": "product-tags"
+        },
+        {
+          "type": "product-collections"
+        }
+      ]
+    }
+  }
+{% endschema %}

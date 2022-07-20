@@ -1,0 +1,19 @@
+<!-- /templates/list-collections.liquid -->
+
+{% section 'collection-header' %}
+
+<div class="collection-page">
+  <div class="row">
+    {% if settings.display_collection_sidebar %}
+      {% assign collection_content_wrap = 'medium-9 large-9' %}
+
+      <div class="medium-3 large-3 columns collection-sidebar js-animate-appear-left">
+        {% section 'collection-sidebar' %}
+      </div>
+    {% endif %}
+
+    <div class="{{ collection_content_wrap }} columns collection-content collections-list js-animate-appear-show">
+      {% section 'list-collections' %}
+    </div>
+  </div>
+</div>

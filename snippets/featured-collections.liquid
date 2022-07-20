@@ -1,0 +1,100 @@
+<div class="content-section__inner">
+  {% unless section.settings.title == blank %}
+    <div class="row columns text-{{ section.settings.text_alignment }}">
+      <h2 class="section-title section__title-style">{{ section.settings.title }}</h2>
+    </div>
+  {% endunless %}
+
+  {% case section.settings.grid %}
+    {% when '2' %}
+      {% assign carousel_settings = '{"slidesToShow": 2}' %}
+      {% assign grid_settings = 'row small-up-1 medium-up-2 large-up-2' %}
+    {% when '3' %}
+      {% assign carousel_settings = '{"slidesToShow": 3}' %}
+      {% assign grid_settings = 'row small-up-1 medium-up-3 large-up-3' %}
+    {% when '4' %}
+      {% assign carousel_settings = '{"slidesToShow": 4}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-4 large-up-4' %}
+    {% when '5' %}
+      {% assign carousel_settings = '{"slidesToShow": 5}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-5 large-up-5' %}
+    {% when '6' %}
+      {% assign carousel_settings = '{"slidesToShow": 6}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-6 large-up-6' %}
+  {% endcase %}
+
+  <div class="content-placeholder {{ grid_settings }} featured__grid_loader {% if section.settings.is_carousel %}featured__carousel_loader{% endif %}">
+    {% if section.settings.is_carousel %}
+      {% assign placeholders_count = section.settings.grid %}
+    {% else %}
+      {% if section.settings.display_type == 'all' %}
+        {% assign placeholders_count = collections.size %}
+      {% else %}
+        {% assign placeholders_count = section.blocks.size %}
+      {% endif %}
+    {% endif %}
+
+    {% for i in (1..placeholders_count ) %}
+      <div class="product-loop-item column placeholder-loading">
+        {%- include 'placeholder-image' -%}
+        {%- include 'placeholder-text' -%}
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="featured__grid__wrap preloaded__content text-{{ section.settings.text_alignment }}">
+    <div class="{{ grid_settings }} featured__grid js-animate-appear {% if section.settings.is_carousel %}featured-carousel{% endif %}" data-slick='{{ carousel_settings }}'>
+      {% assign isEmpty = true %}
+      {% assign grid_item_width = 'column column-block' %}
+
+      {% if section.settings.display_type == 'all' %}
+        {% case section.settings.sort %}
+          {% when 'products_high' or 'products_low' %}
+            {%- assign collections = collections | sort: 'all_products_count' -%}
+          {% when 'date' or 'date_reversed' %}
+            {%- assign collections = collections | sort: 'published_at' -%}
+        {% endcase %}
+        {% if section.settings.sort == 'products_low' or section.settings.sort == 'date' or section.settings.sort == 'alphabetical' %}
+          {% for collection in collections %}
+            {% if collection.handle != 'frontpage' %}
+              {% include 'collection-grid-item', the_collection: collection, show_count: section.settings.show_collection_items_count %}
+              {% assign isEmpty = false %}
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          {% for collection in collections reversed %}
+            {% if collection.handle != 'frontpage' %}
+              {% include 'collection-grid-item', the_collection: collection, show_count: section.settings.show_collection_items_count %}
+              {% assign isEmpty = false %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% else %}
+        {% for block in section.blocks %}
+          {%- assign collection = collections[block.settings.collection] -%}
+          {% include 'collection-grid-item', the_collection: collection, show_count: section.settings.show_collection_items_count %}
+          {% assign isEmpty = false %}
+        {% endfor %}
+      {% endif %}
+
+    </div>
+
+    {% if section.settings.display_see_more_btn and section.settings.see_more_btn_text != blank %}
+      <div class="row columns featured__show-all text-center">
+        {% include 'button-style', button_id: section.id, btn_bg_color: section.settings.btn_bg_color, btn_style: section.settings.btn_style, btn_text_color: section.settings.btn_text_color %}
+        <a id="button-{{section.id}}" href="/collections" class="button {% if section.settings.btn_style == 'hollow' %}hollow{% endif %}" title="{{ section.settings.see_more_btn_text }}">{{ section.settings.see_more_btn_text }}</a>
+      </div>
+    {% endif %}
+
+  </div>
+
+  {% if isEmpty %}
+    {% unless emptyState %}
+      {{ 'theme-onboarding.css' | global_asset_url | stylesheet_tag }}
+      {% assign emptyState = true %}
+    {% endunless %}
+
+    {% include 'onboarding-featured-collections' %}
+  {% endif %}
+
+</div>

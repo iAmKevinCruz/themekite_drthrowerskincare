@@ -1,0 +1,300 @@
+<div class="row">
+  <div class="columns">
+  {% for block in section.blocks %}
+  {% if block.settings.title_main != blank %}
+  <div class="section-header text-left">
+  <h2 class="page-heading">{{ block.settings.title_main | escape }}</h2>
+  </div>
+  {% endif %}
+  
+  <div class="collection-single-part">
+  {% if block.settings.title != blank %}
+    <div class="section-header text-left">
+      <h3 class="section-heading">{{ block.settings.title | escape }}</h3>
+    </div>
+  {% endif %}
+
+  {%- assign collection = collections[block.settings.collection] -%}
+
+  {% case section.settings.grid %}
+    {% when '2' %}
+      {% assign carousel_settings = '{"slidesToShow": 2}' %}
+      {% assign grid_settings = 'row small-up-1 medium-up-2 large-up-2' %}
+    {% when '3' %}
+      {% assign carousel_settings = '{"slidesToShow": 3}' %}
+      {% assign grid_settings = 'row small-up-1 medium-up-3 large-up-3' %}
+    {% when '4' %}
+      {% assign carousel_settings = '{"slidesToShow": 4}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-4 large-up-4' %}
+    {% when '5' %}
+      {% assign carousel_settings = '{"slidesToShow": 5}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-5 large-up-5' %}
+    {% when '6' %}
+      {% assign carousel_settings = '{"slidesToShow": 6}' %}
+      {% assign grid_settings = 'row small-up-2 medium-up-6 large-up-6' %}
+  {% endcase %}
+
+  {%- assign product_limit = block.settings.grid | times: block.settings.rows -%}
+  
+  {% if block.settings.collection != blank %}
+  <div class="featured-carousel">
+  {% for product in collection.products %}
+        {% if forloop.index == 1 %}
+        <div class="collection__products-grid small-up-{{ settings.collection_row_mobile }} medium-up-{{ settings.collection_row_tablet }} large-up-{{ settings.collection_row_desktop }} js-animate-appear-up">
+        {% endif %}
+          {% assign grid_item_width = 'column column-block' %}
+          {% include 'product-grid-item', the_product: product %}
+        {% if forloop.last %}
+        </div>
+        {% endif %}
+      {% else %}
+
+        {% if collection.handle == 'all' and current_tags == '' %}
+          {% unless emptyState %}
+            {{ 'theme-onboarding.css' | global_asset_url | stylesheet_tag }}
+            {% assign emptyState = true %}
+          {% endunless %}
+          {% include 'onboarding-empty-collection' %}
+
+        {% else %}
+          <div class="row columns">
+            <p>{{ 'collections.general.no_matches' | t }}</p>
+          </div>
+        {% endif %}
+      {% endfor %}
+</div>
+  {% endif %}
+  
+  {% if block.settings.show_view_all %}
+    <div class="text-left">
+      <a href="{{ collection.url }}" class="btn shop-link" aria-label="{{ 'collections.general.view_all_label' | t: collection_name: collection.title }}">
+       Shop All
+      </a>
+    </div>
+  {% endif %}
+  </div>
+  
+{% endfor %}
+</div>
+</div>
+
+<script>
+$( document ).ready(function() {
+$('.featured-carousel .collection__products-grid').slick({
+  dots: false,
+  infinite: false,
+  speed: 300,
+  slidesToShow: 4,
+  slidesToScroll: 4,
+  responsive: [
+    {
+      breakpoint: 1024,
+      settings: {
+        slidesToShow: 3,
+        slidesToScroll: 3,
+        infinite: false,
+        dots: false
+      }
+    },
+    {
+      breakpoint: 600,
+      settings: {
+        slidesToShow: 2,
+        slidesToScroll: 2
+      }
+    },
+    {
+      breakpoint: 480,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1
+      }
+    }
+    // You can unslick at a given breakpoint now by adding:
+    // settings: "unslick"
+    // instead of a settings object
+  ]
+});
+});
+</script>
+
+{% schema %}
+{
+  "name": {
+    "de": "Featured Kategorie",
+    "en": "Featured collection",
+    "es": "Colección destacada",
+    "fr": "Collection vedette",
+    "it": "Collezione in evidenza",
+    "ja": "特集コレクション",
+    "nl": "Uitgelichte collectie",
+    "pt-BR": "Coleção em destaque",
+    "zh-CN": "特色产品系列",
+    "zh-TW": "精選商品系列"
+  },
+  "class": "index-section",
+   "blocks": [
+    {
+      "type": "collection",
+      "name": {
+        "en": "Collection"
+      },
+      "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": {
+        "de": "Titel",
+        "en": "Heading",
+        "es": "Título",
+        "fr": "En-tête",
+        "it": "Heading",
+        "ja": "見出し",
+        "nl": "Kop",
+        "pt-BR": "Título",
+        "zh-CN": "标题",
+        "zh-TW": "標題"
+      },
+      "default": {
+        "de": "Featured Kategorie",
+        "en": "Featured collection",
+        "es": "Colección destacada",
+        "fr": "Collection vedette",
+        "it": "Collezione in evidenza",
+        "ja": "特集コレクション",
+        "nl": "Uitgelichte collectie",
+        "pt-BR": "Coleção em destaque",
+        "zh-CN": "特色产品系列",
+        "zh-TW": "精選商品系列"
+      }
+    },
+    {
+      "id": "collection",
+      "type": "collection",
+      "label": {
+        "de": "Kategorie",
+        "en": "Collection",
+        "es": "Colección",
+        "fr": "Collection",
+        "it": "Collezione",
+        "ja": "コレクション",
+        "nl": "Collectie",
+        "pt-BR": "Coleção",
+        "zh-CN": "收藏",
+        "zh-TW": "商品系列"
+      }
+    },
+    {
+      "type": "range",
+      "id": "grid",
+      "label": {
+        "de": "Produkte per Reihe",
+        "en": "Products per row",
+        "es": "Productos por fila",
+        "fr": "Produits par rangée",
+        "it": "Prodotti per riga",
+        "ja": "行あたりの商品数",
+        "nl": "Producten per rij",
+        "pt-BR": "Produtos por linha",
+        "zh-CN": "每行产品数",
+        "zh-TW": "每列產品數"
+      },
+      "min": 5,
+      "max": 10,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "rows",
+      "label": {
+        "de": "Reihen",
+        "en": "Rows",
+        "es": "Filas",
+        "fr": "Rangées",
+        "it": "Righe",
+        "ja": "行",
+        "nl": "Rijen",
+        "pt-BR": "Linhas",
+        "zh-CN": "行数",
+        "zh-TW": "列"
+      },
+      "min": 1,
+      "max": 1,
+      "step": 1,
+      "default": 1
+    },
+	{
+      "type": "checkbox",
+      "id": "show_view_all",
+      "label": {
+        "de": "'Alle anzeigen' Button anzeigen",
+        "en": "Show 'View all' button",
+        "es": "Mostrar el botón 'Ver todo'",
+        "fr": "Afficher le bouton “Tout voir”",
+        "it": "Mostra il pulsante \"Visualizza tutto\"",
+        "ja": "「すべて表示」ボタンを表示する",
+        "nl": "Knop 'Alles weergeven' weergeven",
+        "pt-BR": "Exibir botão 'Visualizar tudo'",
+        "zh-CN": "显示“查看全部”按钮",
+        "zh-TW": "顯示「檢視全部」按鈕"
+      },
+      "default": false
+    }
+  ]
+ },
+	{
+      "type": "text",
+      "name": {
+        "de": "Text",
+        "en": "Text",
+        "es": "Texto",
+        "fr": "Texte",
+        "it": "Testo",
+        "ja": "テキスト",
+        "nl": "Tekst",
+        "pt-BR": "Texto",
+        "zh-CN": "文本",
+        "zh-TW": "文字"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "title_main",
+          "label": {
+            "en": "Heading"
+          }
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": {
+        "de": "Featured Kategorie",
+        "en": "collection selector",
+        "es": "Colección destacada",
+        "fr": "Collection vedette",
+        "it": "Collezione in evidenza",
+        "ja": "特集コレクション",
+        "nl": "Uitgelichte collectie",
+        "pt-BR": "Coleção em destaque",
+        "zh-CN": "特色产品系列",
+        "zh-TW": "精選商品系列"
+      },
+      "category": {
+        "de": "Kategorie",
+        "en": "Collection",
+        "es": "Colección",
+        "fr": "Collection",
+        "it": "Collezione",
+        "ja": "コレクション",
+        "nl": "Collectie",
+        "pt-BR": "Coleção",
+        "zh-CN": "收藏",
+        "zh-TW": "商品系列"
+      }
+    }
+  ]
+}
+{% endschema %}

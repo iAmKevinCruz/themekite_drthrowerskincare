@@ -1,0 +1,148 @@
+{% if the_product == blank %}
+  {% assign the_product = product %}
+{% endif %}
+
+{% unless grid_item_width %}
+  {% assign grid_item_width = 'small-12 medium-3 large-3 columns' %}
+{% endunless %}
+
+{% assign on_sale = false %}
+{% if the_product.compare_at_price > the_product.price %}
+  {% assign on_sale = true %}
+  {%- assign discount_percentage = the_product.compare_at_price | minus: the_product.price | times: 100 | divided_by: the_product.compare_at_price -%}
+{% endif %}
+
+{% assign sold_out = true %}
+{% if the_product.available %}
+  {% assign sold_out = false %}
+{% endif %}
+
+<div class="{{ grid_item_width }} product-loop-item {% if settings.enable_quick_add_to_cart_desktop %}quick-add-to-cart-desktop{% endif %}">
+  {% if settings.show_product_badges %}
+    {% if sold_out %}
+      <div class="product-badge badge__sold-out">{{ 'products.product.out_of_stock' | t }}</div>
+    {% endif %}
+
+    {% if on_sale and sold_out == false and discount_percentage > 0 %}
+      <div class="product-badge badge__sale">{{ 'products.product.save' | t: discount: discount_percentage }} </div>
+    {% endif %}
+  {% endif %}
+
+  <a href="{{ the_product.url | within: collection }}" class="product-loop-image {% if settings.display_secondary_image %}secondary-image-enabled{% endif %}">
+    {%- assign img_url = the_product.featured_image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+    {% unless the_product.featured_image == blank %}
+      {% if settings.display_secondary_image %}
+        {%- assign secondary_img = the_product.images[1] -%}
+      {% endif %}
+
+      <img class="lazyload product-image_featured {% unless secondary_img == blank %} product-image_secondary-enabled {% endunless %}" src="{{ the_product.featured_image | img_url: '300x300' }}"
+        data-src="{{ img_url }}"
+        data-widths="[180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
+        data-aspectratio="{{ the_product.featured_image.aspect_ratio }}"
+        data-sizes="auto"
+        alt="{{ the_product.featured_image.alt | escape }}">
+
+      {% if settings.display_secondary_image %}
+        {% unless secondary_img == blank %}
+          <div class="lazyload product-image_secondary"
+            style="background-image: url('{{ secondary_img | img_url: 'large' }}');"
+            data-bgset="{% include 'bgset', image: secondary_img %}"
+            data-sizes="auto"
+            data-parent-fit="cover">
+          </div>
+        {% endunless %}
+      {% endif %}
+
+     {% assign show_add_to_cart = true %}
+       {% for tag in the_product.tags %}
+    		{% if tag contains 'prescription'%}
+    			{% assign show_add_to_cart = false %}
+    		{% endif %}
+      {% endfor %}
+    
+    
+      {% if settings.enable_quick_add_to_cart_desktop and sold_out == false %}
+        <div class="product-item__action">
+          {% if show_add_to_cart %}
+          {% if the_product.variants.size > 1 %}
+            <input type="submit" onclick="location.href='{{ the_product.url | within: collection }}';"  value="{{ settings.see_buying_options_button_text }}" class="button quick-add-to-cart-btn" />
+          {% else %}
+            <form method="post" action="/cart/add">
+              <input type="hidden" name="id" value="{{ the_product.variants.first.id }}" />
+              <input type="submit" value="{{ 'products.product.add_to_cart' | t }}" class="button addToCartButton quick-add-to-cart-btn" />
+            </form>
+          {% endif %}
+          {% endif %}
+        </div>
+      {% endif %}
+
+    {% endunless %}
+  </a>
+
+  <a class="section__text-style product-loop-title" href="{{ the_product.url | within: collection }}">{{ the_product.title }}</a>
+  <a class="section__text-style product-loop-price" href="{{ the_product.url | within: collection }}">
+    {% if on_sale %}
+      <span class="visually-hidden">{{ 'products.general.regular_price' | t }}</span>
+      <s><span class="money">{{ the_product.compare_at_price | money }}</span></s>
+      {% if the_product.price_varies %}
+        {% assign sale_price = the_product.price | money | prepend: '<span class="money">' | append: '</span>' %}
+        {{ 'products.product.on_sale_from_html' | t: price: sale_price }}
+      {% else %}
+        <span class="money">{{ the_product.price | money }}</span>
+      {% endif %}
+    {% else %}
+      {% if the_product.price_varies %}
+        {% assign price = the_product.price | money | prepend: '<span class="money">' | append: '</span>' %}
+        {{ 'products.general.from_text_html' | t: price: price }}
+      {% else %}
+        <span class="money">{{ the_product.price | money }}</span>
+      {% endif %}
+    {% endif %}
+    {% if sold_out %}
+      <span class="is-sold-out">{{ 'products.product.sold_out' | t }}</span>
+    {% endif %}
+  </a>
+            <span class="rateit k_product_rating" id="{{product.id}}"></span>
+
+  {% if settings.add_spr_markup %}
+   <div class="spr-badge__wrap">
+      <a href="{{ the_product.url | within: collection }}#shopify-product-reviews">
+        <span class="shopify-product-reviews-badge" data-id="{{ the_product.id }}"></span>
+      </a>
+    </div>
+  {% endif %}
+
+  {% if settings.enable_quick_add_to_cart_mobile and sold_out == false %}
+    <div class="product-item__action_mobile">
+      {% if show_add_to_cart %}
+      {% if the_product.variants.size > 1 %}
+        <input type="submit" onclick="location.href='{{ the_product.url | within: collection }}';"  value="{{ settings.see_buying_options_button_text }}" class="quick-add-to-cart-btn button small" />
+      {% else %}
+        <form method="post" action="/cart/add">
+          <input type="hidden" name="id" value="{{ the_product.variants.first.id }}" />
+          <input type="submit" value="{{ 'products.product.add_to_cart' | t }}" class="button small quick-add-to-cart-btn addToCartButton" />
+        </form>
+      {% endif %}
+      {% endif %}
+      
+    </div>
+  {% endif %}
+  {%if step == 'step2'%}
+        {%if product.metafields.my_fields.extra_details == blank%}
+        <p class="pro-bottom-dec"> Best for full body glow. 
+Gradual fading of discoloration in the skin such as: dark knuckles, age or liver spots, dark elbows, dark areas in the feet, bikini area hyperpigmentation, stretch marks. </p>
+  
+  <span class="not-btn">For full body glow</span>
+      
+  <div class="before-after">
+  <img src="https://cdn.shopify.com/s/files/1/0683/7753/files/BLOG-Ads.jpg?v=1643629005">
+  </div>
+  
+        {%else%}
+        {{product.metafields.my_fields.extra_details}}
+        {%endif%}
+      {%endif%}
+  
+</div>
+
+{% assign the_product = '' %}
